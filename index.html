@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.7 最終修正版)</title>
+    <title>互動旅遊地圖 (V7.8 面板優化版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -38,7 +38,7 @@
                 box-shadow: 0 -8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18);
                 display: flex; flex-direction: column; 
                 bottom: 0; left: 0; right: 0; width: 100%; border-radius: 1.5rem 1.5rem 0 0;
-                height: 60vh; /* 預設高度 */
+                height: 34vh; /* V7.8 修正: 預設高度改為 1/3 螢幕 */
                 transition: height 0.4s ease-in-out; 
             }
             #main-panel.panel-expanded { height: 85vh; }
@@ -114,7 +114,7 @@
 
     <script>
     // =======================================================================
-    // V7.7 - 全域變數與通用函式
+    // V7.8 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -132,13 +132,30 @@
     
     function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
     function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleEl.textContent = '請選擇旅程'; }
-    function renderFullCardHTML(item) {
+    
+    // V7.8 桌面版專用卡片渲染
+    function renderDesktopCardHTML(item) {
         let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-3 shadow-sm";
         let titleClasses = "font-semibold text-gray-800";
         let locationClasses = "text-sm text-gray-500";
         if (item.type === 'line') { cardClasses += " hover:bg-slate-200/50"; titleClasses = "font-medium text-xs text-gray-600"; locationClasses = "text-xs text-gray-400"; } 
         else { cardClasses += " hover:ring-2 hover:ring-blue-400"; }
         return `<div class="${cardClasses}" data-index="${item.originalIndex}"><div class="flex justify-between items-center"><div><h4 class="${titleClasses}">${item.title}</h4><p class="${locationClasses}">${item.location || ''}</p></div></div><div class="details mt-2"><p class="text-sm text-gray-600">${item.description || ''}</p><p class="text-sm text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p><textarea class="w-full mt-2 p-2 border rounded-md text-sm" placeholder="在這裡新增您的筆記..."></textarea></div></div>`;
+    }
+
+    // V7.8 手機版專用卡片渲染 (字體較小)
+    function renderMobileCardHTML(item) {
+        let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-2 shadow-sm"; // p-2 for tighter padding
+        let titleClasses = "font-semibold text-sm text-gray-800"; // text-sm
+        let locationClasses = "text-xs text-gray-500"; // text-xs
+        if (item.type === 'line') { 
+            cardClasses += " hover:bg-slate-200/50";
+            titleClasses = "font-medium text-xs text-gray-600";
+            locationClasses = "text-xs text-gray-400";
+        } else { 
+            cardClasses += " hover:ring-2 hover:ring-blue-400"; 
+        }
+        return `<div class="${cardClasses}" data-index="${item.originalIndex}"><div class="flex justify-between items-center"><div><h4 class="${titleClasses}">${item.title}</h4><p class="${locationClasses}">${item.location || ''}</p></div></div><div class="details mt-1"><p class="text-xs text-gray-600">${item.description || ''}</p><p class="text-xs text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p><textarea class="w-full mt-1 p-1 border rounded-md text-xs" placeholder="筆記..."></textarea></div></div>`;
     }
 
     function showSingleEventHighlight(index) {
@@ -199,7 +216,7 @@
     }
     
     // =======================================================================
-    // V7.7 - 桌面版互動模組
+    // V7.8 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -209,7 +226,7 @@
                 const items = groupedByDay[dayKey];
                 const dateGroup = document.createElement('div');
                 dateGroup.className = 'map-date-group rounded-2xl shadow-md overflow-hidden'; dateGroup.dataset.day = dayKey;
-                let cardsHtml = items.map(item => renderFullCardHTML(item)).join('');
+                let cardsHtml = items.map(item => renderDesktopCardHTML(item)).join('');
                 const titles = dailyTitles[dayKey] || { mainTitle: dayKey };
                 dateGroup.innerHTML = `<div class="date-header p-4 cursor-pointer flex justify-between items-center"><div><h3 class="text-lg font-bold">${titles.mainTitle}</h3></div><svg class="expand-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div><div class="map-date-group-content p-3 space-y-2">${cardsHtml}</div>`;
                 container.appendChild(dateGroup);
@@ -223,7 +240,7 @@
     };
 
     // =======================================================================
-    // V7.7 - 手機版互動模組 (全新獨立邏輯)
+    // V7.8 - 手機版互動模組
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -243,7 +260,7 @@
         renderCards: function(dayKey) {
             const container = document.getElementById('mobile-cards-container');
             const items = processedTripData.filter(item => item.day === dayKey);
-            container.innerHTML = items.map(item => renderFullCardHTML(item)).join('');
+            container.innerHTML = items.map(item => renderMobileCardHTML(item)).join('');
         },
         init: function() {
             document.getElementById('mobile-date-tabs').addEventListener('click', this.handleTabClick);
@@ -269,23 +286,16 @@
         handleCardClick: function(e) {
             const card = e.target.closest('.card');
             if (!card) return;
-
             const currentlyActiveCard = document.querySelector('#mobile-cards-container .card.active');
             const cardIndex = card.dataset.index;
-
-            // Case 1: A different card was active, so deactivate it.
             if (currentlyActiveCard && currentlyActiveCard !== card) {
                 currentlyActiveCard.classList.remove('active');
             }
-
-            // Case 2: Toggle the clicked card's active state.
             const wasActive = card.classList.contains('active');
             card.classList.toggle('active');
-
-            // Case 3: Update map highlight based on the new state.
-            if (!wasActive) { // Card is now active
+            if (!wasActive) { 
                 showSingleEventHighlight(cardIndex);
-            } else { // Card is now inactive
+            } else { 
                 clearSingleEventHighlight();
             }
         },
@@ -301,7 +311,7 @@
     };
     
     // =======================================================================
-    // V7.7 - 主程式初始化
+    // V7.8 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
