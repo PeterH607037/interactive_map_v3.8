@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.8 面板優化版)</title>
+    <title>互動旅遊地圖 (V7.9 緊湊佈局版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -81,22 +81,27 @@
     <div id="app-container">
         <div id="map"></div>
         <div id="main-panel">
-            <div class="p-4 border-b border-gray-200/80 flex-shrink-0">
-                <header class="text-center">
-                    <h1 id="main-title" class="text-xl md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
-                    <p id="main-subtitle" class="text-gray-600 mt-1 text-sm truncate"></p>
-                </header>
-                <div class="mt-4">
-                    <label for="trip-selector" class="sr-only">選擇一趟旅程</label>
-                    <select id="trip-selector" class="block w-full p-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm">
-                        <option value="">正在載入旅程清單...</option>
-                    </select>
+            <!-- V7.9 緊湊型手機版頂部 -->
+            <div id="panel-top-section" class="flex-shrink-0 border-b border-gray-200/80">
+                <div class="p-2 md:p-4">
+                    <div class="flex justify-between items-center space-x-2">
+                        <header class="flex-grow min-w-0">
+                            <h1 id="main-title" class="text-lg md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
+                            <p id="main-subtitle" class="text-xs md:text-sm text-gray-600 truncate"></p>
+                        </header>
+                        <div class="flex-shrink-0 w-2/5">
+                            <label for="trip-selector" class="sr-only">選擇一趟旅程</label>
+                            <select id="trip-selector" class="block w-full p-1 md:p-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-xs md:text-sm">
+                                <option value="">載入中...</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="flex-shrink-0 p-2 bg-gray-200/50">
-                <div class="flex justify-center space-x-2 bg-gray-200 p-1 rounded-full w-full max-w-sm mx-auto">
-                    <button id="map-btn" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
-                    <button id="itinerary-btn" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
+                <div class="p-1 md:p-2 bg-gray-200/50">
+                    <div class="flex justify-center space-x-2 bg-gray-200 p-1 rounded-full w-full max-w-sm mx-auto">
+                        <button id="map-btn" class="w-full py-1.5 px-3 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
+                        <button id="itinerary-btn" class="w-full py-1.5 px-3 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
+                    </div>
                 </div>
             </div>
             
@@ -114,7 +119,7 @@
 
     <script>
     // =======================================================================
-    // V7.8 - 全域變數與通用函式
+    // V7.9 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -133,7 +138,6 @@
     function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
     function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleEl.textContent = '請選擇旅程'; }
     
-    // V7.8 桌面版專用卡片渲染
     function renderDesktopCardHTML(item) {
         let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-3 shadow-sm";
         let titleClasses = "font-semibold text-gray-800";
@@ -143,7 +147,6 @@
         return `<div class="${cardClasses}" data-index="${item.originalIndex}"><div class="flex justify-between items-center"><div><h4 class="${titleClasses}">${item.title}</h4><p class="${locationClasses}">${item.location || ''}</p></div></div><div class="details mt-2"><p class="text-sm text-gray-600">${item.description || ''}</p><p class="text-sm text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p><textarea class="w-full mt-2 p-2 border rounded-md text-sm" placeholder="在這裡新增您的筆記..."></textarea></div></div>`;
     }
 
-    // V7.8 手機版專用卡片渲染 (字體較小)
     function renderMobileCardHTML(item) {
         let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-2 shadow-sm"; // p-2 for tighter padding
         let titleClasses = "font-semibold text-sm text-gray-800"; // text-sm
@@ -216,7 +219,7 @@
     }
     
     // =======================================================================
-    // V7.8 - 桌面版互動模組
+    // V7.9 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -240,7 +243,7 @@
     };
 
     // =======================================================================
-    // V7.8 - 手機版互動模組
+    // V7.9 - 手機版互動模組
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -311,12 +314,17 @@
     };
     
     // =======================================================================
-    // V7.8 - 主程式初始化
+    // V7.9 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
             desktopModule.init();
         } else {
+            // V7.9 修正: 在手機上，隱藏桌面版頂部區塊的原始容器
+            const desktopHeader = document.querySelector('.p-4.border-b');
+            const desktopButtons = document.querySelector('.flex-shrink-0.p-2.bg-gray-200\\/50');
+            if (desktopHeader) desktopHeader.style.display = 'none';
+            if (desktopButtons) desktopButtons.style.display = 'none';
             mobileModule.init();
         }
         tripSelector.addEventListener('change', e => { if(allTrips[e.target.value]) loadAndDisplayTrip(allTrips[e.target.value].dataUrl, allTrips[e.target.value].iconUrl); });
