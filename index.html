@@ -54,9 +54,10 @@
             #panel-handle { height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
             #panel-handle .bar { width: 40px; height: 5px; background-color: rgba(0, 0, 0, 0.2); border-radius: 2.5px; }
 
-            /* V7.13 新增: 智慧隱藏區塊的樣式 */
+            /* V7.13 智慧隱藏區塊的樣式 */
             #dropdown-wrapper, #buttons-wrapper {
                 transition: max-height 0.4s ease-in-out, opacity 0.2s ease-in-out, padding 0.4s ease-in-out, margin 0.4s ease-in-out;
+                max-height: 100px; /* 修正: 設定一個明確的初始最大高度 */
             }
             .mobile-section-hidden {
                 max-height: 0 !important;
