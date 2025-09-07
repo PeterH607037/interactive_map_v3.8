@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.9 緊湊佈局版)</title>
+    <title>互動旅遊地圖 (V7.11 緊湊佈局版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -38,7 +38,7 @@
                 box-shadow: 0 -8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18);
                 display: flex; flex-direction: column; 
                 bottom: 0; left: 0; right: 0; width: 100%; border-radius: 1.5rem 1.5rem 0 0;
-                height: 34vh; /* V7.8 修正: 預設高度改為 1/3 螢幕 */
+                height: 34vh; 
                 transition: height 0.4s ease-in-out; 
             }
             #main-panel.panel-expanded { height: 85vh; }
@@ -81,12 +81,14 @@
     <div id="app-container">
         <div id="map"></div>
         <div id="main-panel">
-            <!-- V7.9 緊湊型手機版頂部 -->
+            <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
+
+            <!-- V7.11 緊湊型頂部區塊 -->
             <div id="panel-top-section" class="flex-shrink-0 border-b border-gray-200/80">
-                <div class="p-2 md:p-4">
+                <div class="px-3 py-1 md:p-4">
                     <div class="flex justify-between items-center space-x-2">
                         <header class="flex-grow min-w-0">
-                            <h1 id="main-title" class="text-lg md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
+                            <h1 id="main-title" class="text-base md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
                             <p id="main-subtitle" class="text-xs md:text-sm text-gray-600 truncate"></p>
                         </header>
                         <div class="flex-shrink-0 w-2/5">
@@ -97,16 +99,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="p-1 md:p-2 bg-gray-200/50">
-                    <div class="flex justify-center space-x-2 bg-gray-200 p-1 rounded-full w-full max-w-sm mx-auto">
-                        <button id="map-btn" class="w-full py-1.5 px-3 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
-                        <button id="itinerary-btn" class="w-full py-1.5 px-3 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
+                <div class="py-1 px-2 md:p-2 bg-gray-200/50">
+                    <div class="flex justify-center space-x-2 bg-gray-200 p-0.5 md:p-1 rounded-full w-full max-w-sm mx-auto">
+                        <button id="map-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
+                        <button id="itinerary-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
                     </div>
                 </div>
             </div>
             
-            <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
-
             <main class="flex-grow flex flex-col min-h-0">
                 <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
                 <div id="mobile-t-layout" class="md:hidden flex-grow flex min-h-0">
@@ -119,7 +119,7 @@
 
     <script>
     // =======================================================================
-    // V7.9 - 全域變數與通用函式
+    // V7.11 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -219,7 +219,7 @@
     }
     
     // =======================================================================
-    // V7.9 - 桌面版互動模組
+    // V7.11 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -243,7 +243,7 @@
     };
 
     // =======================================================================
-    // V7.9 - 手機版互動模組
+    // V7.11 - 手機版互動模組
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -314,17 +314,12 @@
     };
     
     // =======================================================================
-    // V7.9 - 主程式初始化
+    // V7.11 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
             desktopModule.init();
         } else {
-            // V7.9 修正: 在手機上，隱藏桌面版頂部區塊的原始容器
-            const desktopHeader = document.querySelector('.p-4.border-b');
-            const desktopButtons = document.querySelector('.flex-shrink-0.p-2.bg-gray-200\\/50');
-            if (desktopHeader) desktopHeader.style.display = 'none';
-            if (desktopButtons) desktopButtons.style.display = 'none';
             mobileModule.init();
         }
         tripSelector.addEventListener('change', e => { if(allTrips[e.target.value]) loadAndDisplayTrip(allTrips[e.target.value].dataUrl, allTrips[e.target.value].iconUrl); });
