@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.13 智慧佈局版)</title>
+    <title>互動旅遊地圖 (V7.14 佈局修正版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -43,6 +43,7 @@
             }
             #main-panel.panel-expanded { height: 85vh; }
 
+            /* --- T字佈局樣式 (僅手機) --- */
             #mobile-date-tabs { flex-shrink: 0; width: 90px; border-right: 1px solid rgba(255, 255, 255, 0.18); overflow-y: auto; -webkit-overflow-scrolling: touch; }
             .mobile-date-tab { padding: 12px 8px; text-align: center; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.1); transition: background-color 0.2s ease; }
             .mobile-date-tab:hover { background-color: rgba(255, 255, 255, 0.1); }
@@ -54,10 +55,9 @@
             #panel-handle { height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
             #panel-handle .bar { width: 40px; height: 5px; background-color: rgba(0, 0, 0, 0.2); border-radius: 2.5px; }
 
-            /* V7.13 智慧隱藏區塊的樣式 */
             #dropdown-wrapper, #buttons-wrapper {
                 transition: max-height 0.4s ease-in-out, opacity 0.2s ease-in-out, padding 0.4s ease-in-out, margin 0.4s ease-in-out;
-                max-height: 100px; /* 修正: 設定一個明確的初始最大高度 */
+                max-height: 100px; 
             }
             .mobile-section-hidden {
                 max-height: 0 !important;
@@ -92,28 +92,52 @@
     <div id="app-container">
         <div id="map"></div>
         <div id="main-panel">
-            <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
-            <div id="panel-top-section" class="flex-shrink-0 border-b border-gray-200/80">
-                <div class="md:flex md:justify-between md:items-center md:space-x-4 md:p-4">
-                    <header class="px-3 pt-1 pb-0.5 text-center md:text-left md:p-0 md:flex-grow md:min-w-0">
-                        <h1 id="main-title" class="text-sm md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
-                        <p id="main-subtitle" class="text-xs md:text-sm text-gray-600 truncate"></p>
+            
+            <!-- V7.14 桌面版頂部 (原始 V3.7 結構) -->
+            <div class="hidden md:block">
+                <div class="p-4 border-b border-gray-200/80 flex-shrink-0">
+                    <header class="text-center">
+                        <h1 id="main-title-desktop" class="text-xl md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
+                        <p id="main-subtitle-desktop" class="text-gray-600 mt-1 text-sm truncate"></p>
                     </header>
-                    <div id="dropdown-wrapper" class="px-3 py-0.5 md:p-0 md:flex-shrink-0 md:w-2/5">
-                        <label for="trip-selector" class="sr-only">選擇一趟旅程</label>
-                        <select id="trip-selector" class="block w-full p-1 md:p-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-xs md:text-sm">
-                            <option value="">載入中...</option>
+                    <div class="mt-4">
+                        <label for="trip-selector-desktop" class="sr-only">選擇一趟旅程</label>
+                        <select id="trip-selector-desktop" class="block w-full p-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm">
+                            <option value="">正在載入旅程清單...</option>
                         </select>
                     </div>
                 </div>
-                <div id="buttons-wrapper" class="py-1 px-2 md:p-2 md:bg-gray-200/50">
-                    <div class="flex justify-center space-x-2 bg-gray-200 p-0.5 md:p-1 rounded-full w-full max-w-sm mx-auto">
-                        <button id="map-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-[11px] md:text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
-                        <button id="itinerary-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-[11px] md:text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
+                <div class="flex-shrink-0 p-2 bg-gray-200/50">
+                    <div class="flex justify-center space-x-2 bg-gray-200 p-1 rounded-full w-full max-w-sm mx-auto">
+                        <button id="map-btn-desktop" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
+                        <button id="itinerary-btn-desktop" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
                     </div>
                 </div>
             </div>
             
+            <!-- V7.14 手機版頂部 (緊湊堆疊結構) -->
+            <div class="block md:hidden">
+                <div id="panel-handle"> <div class="bar"></div> </div>
+                <div id="panel-top-section" class="flex-shrink-0 border-b border-gray-200/80">
+                    <header class="px-3 pt-1 pb-0.5 text-center">
+                        <h1 id="main-title-mobile" class="text-sm font-bold text-gray-900 truncate">讀取中...</h1>
+                        <p id="main-subtitle-mobile" class="text-xs text-gray-600 truncate"></p>
+                    </header>
+                    <div id="dropdown-wrapper" class="px-3 py-0.5">
+                        <label for="trip-selector-mobile" class="sr-only">選擇一趟旅程</label>
+                        <select id="trip-selector-mobile" class="block w-full p-1 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-xs">
+                            <option value="">載入中...</option>
+                        </select>
+                    </div>
+                    <div id="buttons-wrapper" class="py-1 px-2">
+                        <div class="flex justify-center space-x-2 bg-gray-200 p-0.5 rounded-full w-full max-w-sm mx-auto">
+                            <button id="map-btn-mobile" class="w-full py-1 px-2 rounded-full text-[11px] font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
+                            <button id="itinerary-btn-mobile" class="w-full py-1 px-2 rounded-full text-[11px] font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <main class="flex-grow flex flex-col min-h-0">
                 <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
                 <div id="mobile-t-layout" class="md:hidden flex-grow flex min-h-0">
@@ -126,11 +150,16 @@
 
     <script>
     // =======================================================================
-    // V7.13 - 全域變數與通用函式
+    // V7.14 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
-    const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
-        mainTitleEl = document.getElementById('main-title'), mainSubtitleEl = document.getElementById('main-subtitle');
+    const mainPanel = document.getElementById('main-panel');
+    const tripSelectorDesktop = document.getElementById('trip-selector-desktop');
+    const tripSelectorMobile = document.getElementById('trip-selector-mobile');
+    const mainTitleDesktop = document.getElementById('main-title-desktop');
+    const mainSubtitleDesktop = document.getElementById('main-subtitle-desktop');
+    const mainTitleMobile = document.getElementById('main-title-mobile');
+    const mainSubtitleMobile = document.getElementById('main-subtitle-mobile');
     
     const map = L.map('map', { zoomControl: false }).setView([12.8797, 121.7740], 6);
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
@@ -143,7 +172,7 @@
     const getMarker = (item) => L.marker(item.coords, { icon: icons[item.category] || icons.default });
     
     function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
-    function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleEl.textContent = '請選擇旅程'; }
+    function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleDesktop.textContent = '請選擇旅程'; mainTitleMobile.textContent = '請選擇旅程'; }
     
     function renderDesktopCardHTML(item) {
         let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-3 shadow-sm";
@@ -190,15 +219,16 @@
     }
 
     async function loadAndDisplayTrip(dataLink, iconsLink) {
-        resetUI(); mainTitleEl.textContent = "讀取中...";
+        resetUI(); mainTitleDesktop.textContent = "讀取中..."; mainTitleMobile.textContent = "讀取中...";
         try {
             const [iconResponse, dataResponse] = await Promise.all([ fetch(iconsLink), fetch(dataLink) ]);
             const iconData = await iconResponse.json(); const tripData = await dataResponse.json();
             if (iconData.iconMapping) Object.keys(iconData.iconMapping).forEach(cat => icons[cat] = createEmojiIcon(iconData.iconMapping[cat]));
             icons.default = createEmojiIcon('📌'); dailyTitles = tripData.dailyTitles;
             processedTripData = tripData.tripData.map((item, i) => ({ ...item, originalIndex: i }));
-            mainTitleEl.textContent = tripData.mainTitle; mainSubtitleEl.textContent = tripData.mainSubtitle;
-            
+            mainTitleDesktop.textContent = tripData.mainTitle; mainSubtitleDesktop.textContent = tripData.mainSubtitle;
+            mainTitleMobile.textContent = tripData.mainTitle; mainSubtitleMobile.textContent = tripData.mainSubtitle;
+
             const groupedByDay = processedTripData.reduce((acc, item) => { (acc[item.day] = acc[item.day] || []).push(item); return acc; }, {});
             const sortedDays = Object.keys(groupedByDay).sort();
 
@@ -214,19 +244,23 @@
                     window.innerWidth >= 768 ? desktopModule.showDateOnMap(firstDay) : mobileModule.showDateOnMap(firstDay);
                 }
             }, 100);
-        } catch (error) { console.error("載入旅程錯誤:", error); mainTitleEl.textContent = "資料載入失敗"; }
+        } catch (error) { console.error("載入旅程錯誤:", error); mainTitleDesktop.textContent = "資料載入失敗"; mainTitleMobile.textContent = "資料載入失敗"; }
     }
 
     async function initializeTripSelector() {
         const response = await fetch(tripsMetaUrl);
         const metaData = await response.json(); allTrips = metaData.trips || [];
-        tripSelector.innerHTML = '';
-        allTrips.forEach((trip, i) => tripSelector.innerHTML += `<option value="${i}">${trip.tripName}</option>`);
+        tripSelectorDesktop.innerHTML = ''; tripSelectorMobile.innerHTML = '';
+        allTrips.forEach((trip, i) => {
+            const option = `<option value="${i}">${trip.tripName}</option>`;
+            tripSelectorDesktop.innerHTML += option;
+            tripSelectorMobile.innerHTML += option;
+        });
         if (allTrips.length > 0) loadAndDisplayTrip(allTrips[0].dataUrl, allTrips[0].iconUrl);
     }
     
     // =======================================================================
-    // V7.13 - 桌面版互動模組
+    // V7.14 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -250,7 +284,7 @@
     };
 
     // =======================================================================
-    // V7.13 - 手機版互動模組
+    // V7.14 - 手機版互動模組
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -323,17 +357,25 @@
     };
     
     // =======================================================================
-    // V7.13 - 主程式初始化
+    // V7.14 - 主程式初始化
     // =======================================================================
     function initializeApp() {
+        const handleTripChange = (e) => {
+            const selectedIndex = e.target.value;
+            if (allTrips[selectedIndex]) {
+                loadAndDisplayTrip(allTrips[selectedIndex].dataUrl, allTrips[selectedIndex].iconUrl);
+            }
+        };
+        
         if (window.innerWidth >= 768) {
             desktopModule.init();
+            tripSelectorDesktop.addEventListener('change', handleTripChange);
         } else {
             document.getElementById('dropdown-wrapper').classList.add('mobile-section-hidden');
             document.getElementById('buttons-wrapper').classList.add('mobile-section-hidden');
             mobileModule.init();
+            tripSelectorMobile.addEventListener('change', handleTripChange);
         }
-        tripSelector.addEventListener('change', e => { if(allTrips[e.target.value]) loadAndDisplayTrip(allTrips[e.target.value].dataUrl, allTrips[e.target.value].iconUrl); });
         initializeTripSelector();
     }
 
