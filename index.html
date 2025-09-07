@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V5.0 模組化)</title>
+    <title>互動旅遊地圖 (V3.7 + 模組化)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -14,15 +14,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 全局與佈局樣式 --- */
+        /* --- V3.7 全局與佈局樣式 --- */
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', 'Noto Sans TC', sans-serif; position: fixed; }
         #app-container { position: relative; width: 100vw; height: 100vh; }
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* --- 桌面版樣式 --- */
+        /* --- V3.7 浮動面板樣式 (桌面) --- */
         @media (min-width: 768px) {
             #main-panel {
-                position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+                position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
                 box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18);
                 display: flex; flex-direction: column; overflow: hidden; bottom: 1rem; right: 1rem;
                 width: 25%; max-width: 400px; min-width: 320px; border-radius: 1.5rem; max-height: 200px; 
@@ -31,10 +31,10 @@
             #main-panel:hover { max-height: calc(100vh - 2rem); }
         }
         
-        /* --- 手機版介面樣式 --- */
+        /* --- 手機版介面樣式 (模組化) --- */
         @media (max-width: 767px) {
             #main-panel {
-                position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+                position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
                 box-shadow: 0 -8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18);
                 display: flex; flex-direction: column; overflow: visible;
                 bottom: 0; left: 0; right: 0; width: 100%; border-radius: 1.5rem 1.5rem 0 0;
@@ -55,7 +55,7 @@
             #slider-info-card .handle { width: 40px; height: 6px; background-color: #d1d5db; border-radius: 3px; margin: 0 auto 12px; }
         }
         
-        /* --- 共用卡片與圖示樣式 --- */
+        /* --- V3.7 卡片與內容樣式 --- */
         main { flex-grow: 1; overflow-y: auto; }
         .map-date-group, .itinerary-date-group { background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px); }
         .date-header { background-color: rgba(255, 255, 255, 0.2); }
@@ -66,6 +66,8 @@
         .card.active .details { max-height: 500px; transition: max-height 0.5s ease-in; }
         .expand-icon { transition: transform 0.5s ease-in-out; }
         .expanded .expand-icon { transform: rotate(180deg); }
+
+        /* --- V3.7 圖示樣式 --- */
         .custom-marker-icon { background-color: #ffffff; border: 2px solid #1d4ed8; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); position: relative; }
         .custom-marker-icon span { font-size: 22px; line-height: 1; }
         .custom-marker-icon::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #1d4ed8; }
@@ -112,7 +114,7 @@
 
     <script>
     // =======================================================================
-    // V5.0 - 全域變數與通用函式
+    // V5.1 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -159,7 +161,6 @@
             mainTitleEl.textContent = tripData.mainTitle || "我的旅程"; mainSubtitleEl.textContent = tripData.mainSubtitle || "一段難忘的冒險";
             
             createDateGroupedMapCards();
-            // createItineraryCards(); // 暫時註解，可後續加入
             
             setTimeout(() => {
                 const firstGroup = document.querySelector('.map-date-group');
@@ -220,34 +221,37 @@
     }
 
     // =======================================================================
-    // V5.0 - 桌面版互動模組
+    // V5.1 - 桌面版互動模組 (基於 V3.7 穩定邏輯)
     // =======================================================================
     const desktopModule = {
         init: function() {
-            cardsContainer.addEventListener('click', this.handleInteraction);
-            cardsContainer.addEventListener('mouseover', this.handleInteraction);
-            cardsContainer.addEventListener('mouseout', this.handleInteraction);
+            cardsContainer.addEventListener('click', this.handleCardContainerClick);
+            cardsContainer.addEventListener('mouseover', this.handleMouseOver);
+            cardsContainer.addEventListener('mouseout', this.clearSingleEventHighlight);
         },
-        handleInteraction: function(e) {
-            if (e.type === 'click') {
-                const dateHeader = e.target.closest('.date-header');
-                const card = e.target.closest('.card');
-                if (dateHeader) {
-                    const group = dateHeader.closest('.map-date-group'); if (!group) return;
-                    const isExpanded = group.classList.contains('expanded');
-                    document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded'));
-                    if (!isExpanded) { group.classList.add('expanded'); desktopModule.showDateOnMap(group.dataset.day); } 
-                    else { clearMapHighlights(); }
-                } else if (card) {
-                    const wasActive = card.classList.contains('active');
-                    document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
-                    if (!wasActive) card.classList.add('active');
+        handleMouseOver: function(e) {
+            const card = e.target.closest('.card');
+            if (card && card.dataset.index) {
+                desktopModule.showSingleEventHighlight(card.dataset.index);
+            }
+        },
+        handleCardContainerClick: function(e) {
+            const dateHeader = e.target.closest('.date-header');
+            const card = e.target.closest('.card');
+            if (dateHeader) {
+                const group = dateHeader.closest('.map-date-group'); if (!group) return;
+                const isExpanded = group.classList.contains('expanded');
+                document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded'));
+                if (!isExpanded) {
+                    group.classList.add('expanded');
+                    desktopModule.showDateOnMap(group.dataset.day);
+                } else {
+                    clearMapHighlights();
                 }
-            } else if (e.type === 'mouseover') {
-                const card = e.target.closest('.card');
-                if (card) desktopModule.showSingleEventHighlight(card.dataset.index);
-            } else if (e.type === 'mouseout') {
-                desktopModule.clearSingleEventHighlight();
+            } else if (card) {
+                const wasActive = card.classList.contains('active');
+                document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
+                if (!wasActive) card.classList.add('active');
             }
         },
         showDateOnMap: function(day) {
@@ -268,6 +272,7 @@
             const tilePane = map.getPane('tilePane'); if (tilePane) tilePane.style.filter = 'brightness(0.6) grayscale(0.8)';
             if (hoverLayer) map.removeLayer(hoverLayer);
             if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05, fillOpacity: 0.2 }));
+            
             if (item.type === 'point' && item.coords) {
                 hoverLayer = getMarker(item).addTo(map);
             } else if (item.type === 'line' && item.path && item.path.length > 0) {
@@ -285,7 +290,7 @@
     };
 
     // =======================================================================
-    // V5.0 - 手機版互動模組
+    // V5.1 - 手機版互動模組 (獨立邏輯)
     // =======================================================================
     const mobileModule = {
         currentSlider: null,
@@ -339,6 +344,7 @@
             const tilePane = map.getPane('tilePane'); if (tilePane) tilePane.style.filter = 'brightness(0.6) grayscale(0.8)';
             if (hoverLayer) map.removeLayer(hoverLayer);
             if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05, fillOpacity: 0.2 }));
+            
             if (item.type === 'point' && item.coords) {
                 hoverLayer = getMarker(item).addTo(map);
             } else if (item.type === 'line' && item.path && item.path.length > 0) {
@@ -387,7 +393,7 @@
     };
 
     // =======================================================================
-    // V5.0 - 主程式初始化
+    // V5.1 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
