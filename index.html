@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.12 堆疊佈局版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>互動旅遊地圖 (V7.13 智慧佈局版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -43,7 +43,6 @@
             }
             #main-panel.panel-expanded { height: 85vh; }
 
-            /* --- T字佈局樣式 (僅手機) --- */
             #mobile-date-tabs { flex-shrink: 0; width: 90px; border-right: 1px solid rgba(255, 255, 255, 0.18); overflow-y: auto; -webkit-overflow-scrolling: touch; }
             .mobile-date-tab { padding: 12px 8px; text-align: center; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.1); transition: background-color 0.2s ease; }
             .mobile-date-tab:hover { background-color: rgba(255, 255, 255, 0.1); }
@@ -52,9 +51,22 @@
             .mobile-date-tab.active .day-label { color: #1e3a8a; }
             .mobile-date-tab .date-label { font-size: 11px; font-weight: 500; color: #4b5563; }
             #mobile-cards-container { overflow-y: auto; flex-grow: 1; padding: 8px; -webkit-overflow-scrolling: touch; }
-
             #panel-handle { height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
             #panel-handle .bar { width: 40px; height: 5px; background-color: rgba(0, 0, 0, 0.2); border-radius: 2.5px; }
+
+            /* V7.13 新增: 智慧隱藏區塊的樣式 */
+            #dropdown-wrapper, #buttons-wrapper {
+                transition: max-height 0.4s ease-in-out, opacity 0.2s ease-in-out, padding 0.4s ease-in-out, margin 0.4s ease-in-out;
+            }
+            .mobile-section-hidden {
+                max-height: 0 !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                overflow: hidden;
+                opacity: 0;
+            }
         }
 
         /* --- V3.7 卡片與內容樣式 (共用) --- */
@@ -68,8 +80,6 @@
         .card.active .details { max-height: 500px; transition: max-height 0.5s ease-in; }
         .expand-icon { transition: transform 0.5s ease-in-out; }
         .expanded .expand-icon { transform: rotate(180deg); }
-
-        /* --- V3.7 圖示樣式 (共用) --- */
         .custom-marker-icon { background-color: #ffffff; border: 2px solid #1d4ed8; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); position: relative; }
         .custom-marker-icon span { font-size: 22px; line-height: 1; }
         .custom-marker-icon::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #1d4ed8; }
@@ -82,28 +92,20 @@
         <div id="map"></div>
         <div id="main-panel">
             <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
-
-            <!-- V7.12 超緊湊堆疊式頂部 -->
             <div id="panel-top-section" class="flex-shrink-0 border-b border-gray-200/80">
-                <!-- This container is a block on mobile, flex on desktop -->
                 <div class="md:flex md:justify-between md:items-center md:space-x-4 md:p-4">
-                    <!-- Block 1: Title (Mobile styles are default, desktop are md:) -->
                     <header class="px-3 pt-1 pb-0.5 text-center md:text-left md:p-0 md:flex-grow md:min-w-0">
                         <h1 id="main-title" class="text-sm md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
                         <p id="main-subtitle" class="text-xs md:text-sm text-gray-600 truncate"></p>
                     </header>
-        
-                    <!-- Block 2: Dropdown -->
-                    <div class="px-3 py-0.5 md:p-0 md:flex-shrink-0 md:w-2/5">
+                    <div id="dropdown-wrapper" class="px-3 py-0.5 md:p-0 md:flex-shrink-0 md:w-2/5">
                         <label for="trip-selector" class="sr-only">選擇一趟旅程</label>
                         <select id="trip-selector" class="block w-full p-1 md:p-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-xs md:text-sm">
                             <option value="">載入中...</option>
                         </select>
                     </div>
                 </div>
-        
-                <!-- Block 3: Buttons -->
-                <div class="py-1 px-2 md:p-2 md:bg-gray-200/50">
+                <div id="buttons-wrapper" class="py-1 px-2 md:p-2 md:bg-gray-200/50">
                     <div class="flex justify-center space-x-2 bg-gray-200 p-0.5 md:p-1 rounded-full w-full max-w-sm mx-auto">
                         <button id="map-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-[11px] md:text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
                         <button id="itinerary-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-[11px] md:text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
@@ -123,7 +125,7 @@
 
     <script>
     // =======================================================================
-    // V7.12 - 全域變數與通用函式
+    // V7.13 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -152,9 +154,9 @@
     }
 
     function renderMobileCardHTML(item) {
-        let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-2 shadow-sm"; // p-2 for tighter padding
-        let titleClasses = "font-semibold text-sm text-gray-800"; // text-sm
-        let locationClasses = "text-xs text-gray-500"; // text-xs
+        let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-2 shadow-sm";
+        let titleClasses = "font-semibold text-sm text-gray-800";
+        let locationClasses = "text-xs text-gray-500";
         if (item.type === 'line') { 
             cardClasses += " hover:bg-slate-200/50";
             titleClasses = "font-medium text-xs text-gray-600";
@@ -223,7 +225,7 @@
     }
     
     // =======================================================================
-    // V7.12 - 桌面版互動模組
+    // V7.13 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -247,7 +249,7 @@
     };
 
     // =======================================================================
-    // V7.12 - 手機版互動模組
+    // V7.13 - 手機版互動模組
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -276,6 +278,8 @@
         },
         togglePanel: function() {
             mainPanel.classList.toggle('panel-expanded');
+            document.getElementById('dropdown-wrapper').classList.toggle('mobile-section-hidden');
+            document.getElementById('buttons-wrapper').classList.toggle('mobile-section-hidden');
             const activeTab = document.querySelector('.mobile-date-tab.active');
             if (activeTab) {
                 setTimeout(() => mobileModule.showDateOnMap(activeTab.dataset.day), 400); 
@@ -318,12 +322,14 @@
     };
     
     // =======================================================================
-    // V7.12 - 主程式初始化
+    // V7.13 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
             desktopModule.init();
         } else {
+            document.getElementById('dropdown-wrapper').classList.add('mobile-section-hidden');
+            document.getElementById('buttons-wrapper').classList.add('mobile-section-hidden');
             mobileModule.init();
         }
         tripSelector.addEventListener('change', e => { if(allTrips[e.target.value]) loadAndDisplayTrip(allTrips[e.target.value].dataUrl, allTrips[e.target.value].iconUrl); });
