@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.4 互動修正版)</title>
+    <title>互動旅遊地圖 (V7.5 最終修正版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -48,6 +48,7 @@
                 width: 90px;
                 border-right: 1px solid rgba(255, 255, 255, 0.18);
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
             .mobile-date-tab {
                 padding: 12px 8px; text-align: center; cursor: pointer;
@@ -64,6 +65,7 @@
                 overflow-y: auto;
                 flex-grow: 1;
                 padding: 8px;
+                -webkit-overflow-scrolling: touch;
             }
         }
 
@@ -115,7 +117,7 @@
                 <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
 
                 <!-- 手機版 T字佈局容器 -->
-                <div id="mobile-t-layout" class="md:hidden flex flex-grow min-h-0">
+                <div id="mobile-t-layout" class="md:hidden flex-grow flex min-h-0">
                     <div id="mobile-date-tabs"></div>
                     <div id="mobile-cards-container" class="space-y-2"></div>
                 </div>
@@ -125,7 +127,7 @@
 
     <script>
     // =======================================================================
-    // V7.4 - 全域變數與通用函式
+    // V7.5 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -152,7 +154,6 @@
         return `<div class="${cardClasses}" data-index="${item.originalIndex}"><div class="flex justify-between items-center"><div><h4 class="${titleClasses}">${item.title}</h4><p class="${locationClasses}">${item.location || ''}</p></div></div><div class="details mt-2"><p class="text-sm text-gray-600">${item.description || ''}</p><p class="text-sm text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p><textarea class="w-full mt-2 p-2 border rounded-md text-sm" placeholder="在這裡新增您的筆記..."></textarea></div></div>`;
     }
 
-    // V7.4 提取共用的聚光燈效果函式
     function showSingleEventHighlight(index) {
         const item = processedTripData[index]; if (!item) return;
         const tilePane = map.getPane('tilePane');
@@ -211,7 +212,7 @@
     }
     
     // =======================================================================
-    // V7.4 - 桌面版互動模組
+    // V7.5 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -235,7 +236,7 @@
     };
 
     // =======================================================================
-    // V7.4 - 手機版互動模組
+    // V7.5 - 手機版互動模組 (全新獨立邏輯)
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -274,19 +275,24 @@
             const card = e.target.closest('.card');
             if (!card) return;
             const wasActive = card.classList.contains('active');
+            const cardIndex = card.dataset.index;
+            
+            // 無論如何，先清除所有現有的 active 狀態和高亮
             document.querySelectorAll('#mobile-cards-container .card.active').forEach(c => c.classList.remove('active'));
+            clearSingleEventHighlight();
+
+            // 如果點擊的卡片不是剛才 active 的那個，就把它設為 active 並高亮
             if (!wasActive) {
                 card.classList.add('active');
-                showSingleEventHighlight(card.dataset.index); // V7.4 呼叫通用函式
-            } else {
-                clearSingleEventHighlight(); // V7.4 呼叫通用函式
+                showSingleEventHighlight(cardIndex);
             }
+            // 如果點擊的是剛才 active 的卡片，上面的清除步驟已經處理了所有事，這裡什麼都不用做
         },
         showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => ((item.type === 'point' && item.coords) ? getMarker(item) : ((item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null))).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50,50], paddingBottom: mainPanel.offsetHeight + 20 }); } },
     };
     
     // =======================================================================
-    // V7.4 - 主程式初始化
+    // V7.5 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
