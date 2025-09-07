@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V3.8 抽屜面板)</title>
+    <title>互動旅遊地圖 (V3.9 三段式抽屜)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -22,7 +22,7 @@
             padding: 0;
             overflow: hidden;
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
-            position: fixed; /* V3.8 新增：防止手機瀏覽器滾動 */
+            position: fixed; 
         }
 
         #app-container {
@@ -72,22 +72,29 @@
             }
         }
 
-        /* --- V3.8 手機版抽屜式面板樣式 (核心修改) --- */
+        /* --- V3.9 手機版三段式抽屜面板樣式 (核心修改) --- */
         @media (max-width: 767px) {
             #main-panel {
-                top: auto; /* 解除頂部對齊 */
+                top: auto; 
                 bottom: 0;
                 left: 0;
                 right: 0;
                 width: 100%;
-                height: 45vh; /* 預設收合高度 */
-                max-height: 90vh; /* 最大展開高度 */
-                border-radius: 1.5rem 1.5rem 0 0; /* 僅頂部有圓角 */
-                transition: height 0.4s ease-in-out; /* 高度變化動畫 */
+                /* 高度由 data-state 屬性控制 */
+                max-height: 90vh; 
+                border-radius: 1.5rem 1.5rem 0 0;
+                transition: height 0.4s ease-in-out; 
+                touch-action: none; /* 防止頁面在拖曳面板時滾動 */
             }
-            /* V3.8 新增: 面板展開時的樣式 */
-            #main-panel.panel-expanded {
-                height: 85vh; /* 展開後的高度 */
+            /* V3.9 新增: 三種面板狀態的高度 */
+            #main-panel[data-state="peek"] {
+                height: 120px; /* 窺視狀態 */
+            }
+            #main-panel[data-state="half"] {
+                height: 45vh; /* 半開狀態 (預設) */
+            }
+            #main-panel[data-state="full"] {
+                height: 85vh; /* 全螢幕狀態 */
             }
         }
 
@@ -153,7 +160,6 @@
         <div id="map"></div>
 
         <div id="main-panel" class="floating-panel">
-            <!-- V3.8 新增: 手機版抽屜面板的把手 -->
             <div id="panel-handle" class="py-3 text-center cursor-pointer md:hidden bg-white/20">
                 <div class="inline-block w-10 h-1.5 bg-gray-400 rounded-full"></div>
             </div>
@@ -191,15 +197,15 @@
 
     <script>
     // =======================================================================
-    // V3.8 - 全域變數與設定 (部分新增)
+    // V3.9 - 全域變數與設定
     // =======================================================================
     let allTrips = [];
     let processedTripData = [];
     let dailyTitles = {};
     let icons = {};
 
-    const mainPanel = document.getElementById('main-panel'); // V3.8 新增
-    const panelHandle = document.getElementById('panel-handle'); // V3.8 新增
+    const mainPanel = document.getElementById('main-panel');
+    const panelHandle = document.getElementById('panel-handle');
     const tripSelector = document.getElementById('trip-selector');
     const mapBtn = document.getElementById('map-btn');
     const itineraryBtn = document.getElementById('itinerary-btn');
@@ -229,7 +235,7 @@
     });
 
     // =======================================================================
-    // V3.8 - 程式主要邏輯 (部分修改)
+    // V3.9 - 程式主要邏輯
     // =======================================================================
 
     function resetUI() {
@@ -243,9 +249,9 @@
         mainTitleEl.textContent = '請選擇一趟旅程';
         mainSubtitleEl.textContent = '從上方的下拉選單開始';
 
-        // V3.8 新增: 重置時確保手機面板是收合狀態
+        // V3.9 修改: 重置時確保手機面板是半開狀態
         if (window.innerWidth < 768) {
-            mainPanel.classList.remove('panel-expanded');
+            mainPanel.setAttribute('data-state', 'half');
         }
     }
 
@@ -460,7 +466,7 @@
         return L.marker(item.coords, { icon: icon });
     }
     
-    // --- V3.8 修改：地圖視野調整邏輯 ---
+    // --- V3.9 修改：地圖視野調整邏輯 ---
     function showDateOnMap(day) {
         clearMapHighlights();
         const items = processedTripData.filter(item => item.day === day);
@@ -479,7 +485,7 @@
             if (window.innerWidth >= 768) {
                 // 桌面版邏輯 (無變動)
                 const paddingLeft = 50;
-                const panelWidth = mainPanel.offsetWidth; // 動態獲取面板寬度
+                const panelWidth = mainPanel.offsetWidth;
                 const paddingRight = panelWidth + paddingLeft; 
                 
                 map.flyToBounds(bounds, { 
@@ -488,10 +494,10 @@
                     maxZoom: 14 
                 });
             } else {
-                // V3.8 手機版抽屜式面板地圖置中邏輯 (核心修改)
-                const panelHeight = mainPanel.offsetHeight; // 動態獲取面板當前高度
-                const topPadding = 60;  // 頂部留白，避免標記太靠上
-                const bottomPadding = panelHeight + 20; // 底部留白，考慮到面板高度
+                // 手機版抽屜式面板地圖置中邏輯 (無變動，因其動態偵測高度)
+                const panelHeight = mainPanel.offsetHeight;
+                const topPadding = 60;
+                const bottomPadding = panelHeight + 20;
                 
                 map.flyToBounds(bounds, { 
                     paddingTopLeft: [topPadding, 50],
@@ -597,7 +603,7 @@
         }
     }
 
-    // --- V3.8 事件監聽 (部分新增) ---
+    // --- 事件監聽 ---
     tripSelector.addEventListener('change', (e) => {
         const selectedIndex = e.target.value;
         if (selectedIndex !== "" && allTrips[selectedIndex]) {
@@ -631,28 +637,116 @@
         }
     });
 
-    // V3.8 新增: 手機版抽屜面板把手的點擊事件
-    panelHandle.addEventListener('click', () => {
-        mainPanel.classList.toggle('panel-expanded');
-        // 當面板狀態改變後，重新調整地圖視野以適應新的可見區域
-        // 延遲一點時間等待CSS動畫完成，再重新計算邊界
-        setTimeout(() => {
-            if (activeLayer) {
-                const day = document.querySelector('.map-date-group.expanded')?.dataset.day;
-                if (day) {
-                    showDateOnMap(day);
+    // =======================================================================
+    // V3.9 - 手機版抽屜面板互動邏輯 (核心修改)
+    // =======================================================================
+    function setupMobilePanel() {
+        if (window.innerWidth >= 768) {
+            mainPanel.removeAttribute('data-state');
+            return;
+        }
+
+        let touchStartY = 0;
+        let initialPanelHeight = 0;
+        let isDragging = false;
+        let dragDistance = 0;
+        const dragThreshold = 10; // 拖曳超過 10px 才算拖曳，以區分點擊
+
+        const vh = window.innerHeight;
+        const STATE_HEIGHTS = {
+            peek: 120,
+            half: vh * 0.45,
+            full: vh * 0.85
+        };
+
+        mainPanel.setAttribute('data-state', 'half');
+
+        const updateMapPadding = () => {
+            setTimeout(() => {
+                const currentDayGroup = document.querySelector('.map-date-group.expanded');
+                if (activeLayer && currentDayGroup) {
+                    showDateOnMap(currentDayGroup.dataset.day);
                 } else {
-                     map.invalidateSize(); // 如果沒有選中的日期，也觸發地圖重繪
+                    map.invalidateSize({ animate: true });
                 }
-            } else {
-                map.invalidateSize();
-            }
-        }, 410); // 略長於CSS transition時間
-    });
+            }, 410); // 等待 CSS 動畫完成
+        };
+        
+        const handleTouchMove = (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            const touchY = e.touches[0].clientY;
+            const deltaY = touchY - touchStartY;
+            dragDistance = Math.abs(deltaY);
+            let newHeight = initialPanelHeight - deltaY;
+
+            if (newHeight < STATE_HEIGHTS.peek * 0.8) newHeight = STATE_HEIGHTS.peek * 0.8;
+            if (newHeight > vh * 0.9) newHeight = vh * 0.9;
+            mainPanel.style.height = newHeight + 'px';
+        };
+
+        const handleTouchEnd = () => {
+            document.removeEventListener('touchmove', handleTouchMove);
+            if (!isDragging) return;
+            isDragging = false;
+
+            mainPanel.style.transition = 'height 0.4s ease-in-out';
+            const finalHeight = mainPanel.offsetHeight;
+            mainPanel.style.height = '';
+
+            if (dragDistance < dragThreshold) return;
+
+            const distToPeek = Math.abs(finalHeight - STATE_HEIGHTS.peek);
+            const distToHalf = Math.abs(finalHeight - STATE_HEIGHTS.half);
+            const distToFull = Math.abs(finalHeight - STATE_HEIGHTS.full);
+
+            const minDistance = Math.min(distToPeek, distToHalf, distToFull);
+            
+            let newState = mainPanel.getAttribute('data-state');
+            if (minDistance === distToPeek) newState = 'peek';
+            else if (minDistance === distToHalf) newState = 'half';
+            else if (minDistance === distToFull) newState = 'full';
+
+            mainPanel.setAttribute('data-state', newState);
+            updateMapPadding();
+        };
+
+        const handleTouchStart = (e) => {
+            isDragging = true;
+            dragDistance = 0;
+            touchStartY = e.touches[0].clientY;
+            initialPanelHeight = mainPanel.offsetHeight;
+            mainPanel.style.transition = 'none';
+
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { once: true });
+        };
+
+        const handleHandleClick = () => {
+            if (dragDistance > dragThreshold) return;
+
+            const currentState = mainPanel.getAttribute('data-state');
+            let nextState = 'half';
+
+            if (currentState === 'half') nextState = 'full';
+            else if (currentState === 'full') nextState = 'peek';
+            else if (currentState === 'peek') nextState = 'half';
+            
+            mainPanel.setAttribute('data-state', nextState);
+            updateMapPadding();
+        };
+
+        panelHandle.addEventListener('touchstart', handleTouchStart, { passive: true });
+        panelHandle.addEventListener('click', handleHandleClick);
+    }
+
 
     // --- 執行主函式 ---
     initializeTripSelector();
+    setupMobilePanel();
 
     </script>
 </body>
 </html>
+
