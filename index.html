@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V3.7 + 模組化)</title>
+    <title>互動旅遊地圖 (V6.0 T字佈局)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -14,12 +14,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* --- V3.7 全局與佈局樣式 --- */
+        /* --- 全局與佈局樣式 --- */
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', 'Noto Sans TC', sans-serif; position: fixed; }
         #app-container { position: relative; width: 100vw; height: 100vh; }
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* --- V3.7 浮動面板樣式 (桌面) --- */
+        /* --- 桌面版樣式 (源自 V3.7) --- */
         @media (min-width: 768px) {
             #main-panel {
                 position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
@@ -31,30 +31,46 @@
             #main-panel:hover { max-height: calc(100vh - 2rem); }
         }
         
-        /* --- 手機版介面樣式 (模組化) --- */
+        /* --- 手機版介面樣式 (V6.0) --- */
         @media (max-width: 767px) {
             #main-panel {
                 position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
                 box-shadow: 0 -8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18);
-                display: flex; flex-direction: column; overflow: visible;
+                display: flex; flex-direction: column; 
                 bottom: 0; left: 0; right: 0; width: 100%; border-radius: 1.5rem 1.5rem 0 0;
+                height: 45vh; /* 預設高度 */
                 transition: height 0.4s ease-in-out; 
             }
+            #main-panel.panel-expanded { height: 85vh; /* 展開高度 */ }
         }
         
-        /* --- 時間軸滑桿相關樣式 (僅手機) --- */
-        .slider-wrapper { display: none; }
-        @media (max-width: 767px) {
-            .slider-wrapper { display: block; padding: 16px 24px 20px 24px; }
-            .slider-track { position: relative; height: 4px; background-color: rgba(255, 255, 255, 0.4); border-radius: 2px; }
-            .slider-thumb { position: absolute; top: 50%; left: 0; width: 24px; height: 24px; background-color: #ffffff; border: 3px solid #3b82f6; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-            .slider-stop { position: absolute; top: 50%; width: 10px; height: 10px; background-color: rgba(255, 255, 255, 0.6); border-radius: 50%; transform: translate(-50%, -50%); }
-            #slider-preview-tooltip { position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background-color: rgba(30, 41, 59, 0.9); color: white; padding: 6px 12px; border-radius: 8px; font-size: 14px; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0.2s ease; pointer-events: none; }
-            #slider-info-card { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 1.5rem 1.5rem 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); padding: 16px; transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 20; max-height: 40vh; overflow-y: auto; }
-            #slider-info-card.visible { transform: translateY(0); }
-            #slider-info-card .handle { width: 40px; height: 6px; background-color: #d1d5db; border-radius: 3px; margin: 0 auto 12px; }
+        /* --- T字佈局樣式 (僅手機 V6.0) --- */
+        #mobile-t-layout { height: 100%; }
+        #mobile-date-tabs {
+            flex-shrink: 0; /* 防止被壓縮 */
+            width: 90px;
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
+            overflow-y: auto;
         }
-        
+        .mobile-date-tab {
+            padding: 12px 8px; text-align: center; cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.2s ease;
+        }
+        .mobile-date-tab:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .mobile-date-tab.active { background-color: rgba(255, 255, 255, 0.2); font-weight: bold; }
+        .mobile-date-tab .day-label { font-size: 12px; font-weight: 500; color: #4b5563; }
+        .mobile-date-tab.active .day-label { color: #1e3a8a; }
+        .mobile-date-tab .date-label { font-size: 14px; font-weight: 700; color: #1f2937; }
+
+        #mobile-cards-container { overflow-y: auto; flex-grow: 1; }
+
+        #panel-handle {
+            height: 20px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0;
+        }
+        #panel-handle .bar { width: 40px; height: 5px; background-color: rgba(0, 0, 0, 0.2); border-radius: 2.5px; }
+
         /* --- V3.7 卡片與內容樣式 --- */
         main { flex-grow: 1; overflow-y: auto; }
         .map-date-group, .itinerary-date-group { background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px); }
@@ -78,12 +94,9 @@
 
     <div id="app-container">
         <div id="map"></div>
-        <div id="slider-info-card" class="md:hidden">
-            <div class="handle"></div>
-            <div id="slider-info-card-content"></div>
-        </div>
         <div id="main-panel">
-            <div class="p-4 border-b border-gray-200/80 flex-shrink-0">
+            <!-- 頂部通用區域 -->
+            <div class="p-4 border-b border-gray-200/80 flex-shrink-0 hidden md:block">
                 <header class="text-center">
                     <h1 id="main-title" class="text-xl md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
                     <p id="main-subtitle" class="text-gray-600 mt-1 text-sm truncate"></p>
@@ -95,18 +108,24 @@
                     </select>
                 </div>
             </div>
-            <div class="flex-shrink-0 p-2 bg-gray-200/50">
+            <div class="flex-shrink-0 p-2 bg-gray-200/50 hidden md:block">
                 <div class="flex justify-center space-x-2 bg-gray-200 p-1 rounded-full w-full max-w-sm mx-auto">
                     <button id="map-btn" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
                     <button id="itinerary-btn" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
                 </div>
             </div>
-            <main>
-                <div id="map-view">
-                    <div id="cards-container" class="p-2 md:p-4 space-y-4"></div>
-                </div>
-                <div id="itinerary-view" class="hidden">
-                    <div id="itinerary-cards-container" class="p-2 md:p-4 space-y-4"></div>
+
+            <!-- V6.0 新增: 手機版面板把手 -->
+            <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
+
+            <main class="flex-grow flex flex-col min-h-0">
+                <!-- V6.0 桌面版容器 -->
+                <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
+
+                <!-- V6.0 手機版 T字佈局容器 -->
+                <div id="mobile-t-layout" class="flex-grow flex md:hidden min-h-0">
+                    <div id="mobile-date-tabs"></div>
+                    <div id="mobile-cards-container" class="p-2 space-y-2"></div>
                 </div>
             </main>
         </div>
@@ -114,13 +133,13 @@
 
     <script>
     // =======================================================================
-    // V5.1 - 全域變數與通用函式
+    // V6.0 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
         mapBtn = document.getElementById('map-btn'), itineraryBtn = document.getElementById('itinerary-btn'),
         mapView = document.getElementById('map-view'), itineraryView = document.getElementById('itinerary-view'),
-        cardsContainer = document.getElementById('cards-container'), itineraryCardsContainer = document.getElementById('itinerary-cards-container'),
+        cardsContainer = document.getElementById('cards-container'),
         mainTitleEl = document.getElementById('main-title'), mainSubtitleEl = document.getElementById('main-subtitle');
     
     const map = L.map('map', { zoomControl: false }).setView([12.8797, 121.7740], 6);
@@ -133,285 +152,165 @@
     const getLineStyle = (transport) => { if (transport && transport.includes('步行')) return { color: '#3b82f6', weight: 3, dashArray: '3, 8' }; return { color: '#f97316', weight: 4 }; };
     const getMarker = (item) => L.marker(item.coords, { icon: icons[item.category] || icons.default });
     
-    function clearMapHighlights() {
-        if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer);
-        activeLayer = null; hoverLayer = null;
-    }
+    function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
 
-    function resetUI() {
-        mobileModule.hideSliderUI();
-        clearMapHighlights();
-        cardsContainer.innerHTML = ''; itineraryCardsContainer.innerHTML = '';
-        processedTripData = []; dailyTitles = {}; icons = {};
-        mainTitleEl.textContent = '請選擇一趟旅程'; mainSubtitleEl.textContent = '從上方的下拉選單開始';
-        if (window.innerWidth < 768) mainPanel.style.height = '';
-    }
+    function resetUI() { clearMapHighlights(); cardsContainer.innerHTML = ''; processedTripData = []; mainTitleEl.textContent = '請選擇旅程'; }
 
     async function loadAndDisplayTrip(dataLink, iconsLink) {
-        resetUI();
-        mainTitleEl.textContent = "讀取中...";
+        resetUI(); mainTitleEl.textContent = "讀取中...";
         try {
-            const [iconResponse, dataResponse] = await Promise.all([ fetch(iconsLink, { cache: 'no-cache' }), fetch(dataLink, { cache: 'no-cache' }) ]);
-            if (!iconResponse.ok || !dataResponse.ok) throw new Error(`讀取行程資料失敗`);
+            const [iconResponse, dataResponse] = await Promise.all([ fetch(iconsLink), fetch(dataLink) ]);
+            if (!iconResponse.ok || !dataResponse.ok) throw new Error(`讀取資料失敗`);
             const iconData = await iconResponse.json(); const tripData = await dataResponse.json();
-            if (iconData.iconMapping) { Object.keys(iconData.iconMapping).forEach(cat => icons[cat] = createEmojiIcon(iconData.iconMapping[cat])); }
-            icons.default = createEmojiIcon('📌');
-            dailyTitles = tripData.dailyTitles;
+            if (iconData.iconMapping) Object.keys(iconData.iconMapping).forEach(cat => icons[cat] = createEmojiIcon(iconData.iconMapping[cat]));
+            icons.default = createEmojiIcon('📌'); dailyTitles = tripData.dailyTitles;
             processedTripData = tripData.tripData.map((item, i) => ({ ...item, originalIndex: i }));
-            mainTitleEl.textContent = tripData.mainTitle || "我的旅程"; mainSubtitleEl.textContent = tripData.mainSubtitle || "一段難忘的冒險";
+            mainTitleEl.textContent = tripData.mainTitle || "我的旅程";
+            mainSubtitleEl.textContent = tripData.mainSubtitle || "一段難忘的冒險";
             
-            createDateGroupedMapCards();
-            
+            // 渲染介面
+            const groupedByDay = processedTripData.reduce((acc, item) => {
+                const day = item.day || 'misc'; (acc[day] = acc[day] || []).push(item); return acc;
+            }, {});
+            const sortedDays = Object.keys(groupedByDay).sort();
+
+            desktopModule.render(groupedByDay, sortedDays);
+            mobileModule.render(groupedByDay, sortedDays);
+
+            // 初始地圖視圖
             setTimeout(() => {
-                const firstGroup = document.querySelector('.map-date-group');
-                if (firstGroup) {
-                    const day = firstGroup.dataset.day;
+                if (sortedDays.length > 0) {
+                    const firstDay = sortedDays[0];
                     if (window.innerWidth >= 768) {
-                        desktopModule.showDateOnMap(day);
-                        firstGroup.classList.add('expanded');
+                        desktopModule.showDateOnMap(firstDay);
+                        const firstGroup = document.querySelector('.map-date-group');
+                        if(firstGroup) firstGroup.classList.add('expanded');
                     } else {
-                        mobileModule.showDateOnMap(day);
+                        mobileModule.showDateOnMap(firstDay);
                     }
                 }
             }, 100);
-        } catch (error) { console.error("載入旅程時發生錯誤:", error); mainTitleEl.textContent = "資料載入失敗"; }
+        } catch (error) { console.error("載入旅程錯誤:", error); mainTitleEl.textContent = "資料載入失敗"; }
     }
 
     async function initializeTripSelector() {
         try {
-            const response = await fetch(tripsMetaUrl, { cache: 'no-cache' });
-            if (!response.ok) throw new Error(`讀取主設定檔失敗`);
+            const response = await fetch(tripsMetaUrl);
             const metaData = await response.json(); allTrips = metaData.trips || [];
-            tripSelector.innerHTML = allTrips.length ? '' : '<option>無可用旅程</option>';
-            allTrips.forEach((trip, index) => { tripSelector.innerHTML += `<option value="${index}">${trip.tripName}</option>`; });
+            tripSelector.innerHTML = '';
+            allTrips.forEach((trip, i) => tripSelector.innerHTML += `<option value="${i}">${trip.tripName}</option>`);
             if (allTrips.length > 0) loadAndDisplayTrip(allTrips[0].dataUrl, allTrips[0].iconUrl);
-        } catch (error) { console.error("初始化旅程選擇器時發生錯誤:", error); mainTitleEl.textContent = "旅程清單載入失敗"; }
+        } catch (error) { console.error("初始化旅程選擇器錯誤:", error); }
     }
     
-    function createDateGroupedMapCards() {
-        cardsContainer.innerHTML = '';
-        const groupedByDay = processedTripData.reduce((acc, item) => {
-            const day = item.day || 'misc'; (acc[day] = acc[day] || []).push(item); return acc;
-        }, {});
-        Object.keys(groupedByDay).sort().forEach(dayKey => {
-            const items = groupedByDay[dayKey]; const dateGroup = document.createElement('div');
-            dateGroup.className = 'map-date-group rounded-2xl shadow-md overflow-hidden'; dateGroup.dataset.day = dayKey;
-            
-            const desktopCardsHtml = items.map(item => {
-                let cardClasses = "card cursor-pointer transition-all duration-200"; let titleClasses = "font-semibold text-gray-800"; let locationClasses = "text-sm text-gray-500";
-                if (item.type === 'line') { cardClasses += " rounded-md p-2 hover:bg-slate-200/50 text-right"; titleClasses = "font-medium text-xs text-gray-600"; locationClasses = "text-xs text-gray-400"; }
-                else { cardClasses += " rounded-lg p-3 hover:ring-2 hover:ring-blue-400 shadow-sm"; }
-                return `<div class="${cardClasses}" data-index="${item.originalIndex}">
-                    <div class="flex justify-between items-center"><div><h4 class="${titleClasses}">${item.title}</h4><p class="${locationClasses}">${item.location || ''}</p></div></div>
-                    <div class="details mt-2"><p class="text-sm text-gray-600">${item.description || ''}</p><p class="text-sm text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p><textarea class="w-full mt-2 p-2 border rounded-md text-sm" placeholder="在這裡新增您的筆記..."></textarea></div>
-                </div>`;
-            }).join('');
-
-            const titles = dailyTitles[dayKey] || { mainTitle: dayKey, subtitle: '當日行程' };
-            dateGroup.innerHTML = `
-                <div class="date-header p-4 cursor-pointer flex justify-between items-center">
-                    <div><h3 class="text-lg font-bold">${titles.mainTitle}</h3><p class="text-sm text-gray-500">${titles.subtitle}</p></div>
-                    <svg class="expand-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                </div>
-                <div class="map-date-group-content p-3 space-y-2 hidden md:block">${desktopCardsHtml}</div>
-                <div class="slider-wrapper md:hidden"></div>
-            `;
-            cardsContainer.appendChild(dateGroup);
-        });
-    }
-
     // =======================================================================
-    // V5.1 - 桌面版互動模組 (基於 V3.7 穩定邏輯)
+    // V6.0 - 桌面版互動模組 (基於 V3.7 穩定邏輯)
     // =======================================================================
     const desktopModule = {
-        init: function() {
-            cardsContainer.addEventListener('click', this.handleCardContainerClick);
-            cardsContainer.addEventListener('mouseover', this.handleMouseOver);
-            cardsContainer.addEventListener('mouseout', this.clearSingleEventHighlight);
-        },
-        handleMouseOver: function(e) {
-            const card = e.target.closest('.card');
-            if (card && card.dataset.index) {
-                desktopModule.showSingleEventHighlight(card.dataset.index);
-            }
-        },
-        handleCardContainerClick: function(e) {
-            const dateHeader = e.target.closest('.date-header');
-            const card = e.target.closest('.card');
-            if (dateHeader) {
-                const group = dateHeader.closest('.map-date-group'); if (!group) return;
-                const isExpanded = group.classList.contains('expanded');
-                document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded'));
-                if (!isExpanded) {
-                    group.classList.add('expanded');
-                    desktopModule.showDateOnMap(group.dataset.day);
-                } else {
-                    clearMapHighlights();
-                }
-            } else if (card) {
-                const wasActive = card.classList.contains('active');
-                document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
-                if (!wasActive) card.classList.add('active');
-            }
-        },
-        showDateOnMap: function(day) {
-            clearMapHighlights();
-            const items = processedTripData.filter(item => item.day === day);
-            const layers = items.map(item => {
-                if (item.type === 'point' && item.coords) return getMarker(item);
-                if (item.type === 'line' && item.path) return L.polyline(item.path, getLineStyle(item.transport));
-                return null;
-            }).filter(Boolean);
-            if (layers.length > 0) {
-                activeLayer = L.featureGroup(layers).addTo(map);
-                map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50, 50], paddingBottomRight: [50, mainPanel.offsetWidth + 50] });
-            }
-        },
-        showSingleEventHighlight: function(index) {
-            const item = processedTripData[index]; if (!item) return;
-            const tilePane = map.getPane('tilePane'); if (tilePane) tilePane.style.filter = 'brightness(0.6) grayscale(0.8)';
-            if (hoverLayer) map.removeLayer(hoverLayer);
-            if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05, fillOpacity: 0.2 }));
-            
-            if (item.type === 'point' && item.coords) {
-                hoverLayer = getMarker(item).addTo(map);
-            } else if (item.type === 'line' && item.path && item.path.length > 0) {
-                const startMarker = getMarker({ ...item, coords: item.path[0] });
-                const endMarker = getMarker({ ...item, coords: item.path[item.path.length - 1] });
-                hoverLayer = L.featureGroup([startMarker, endMarker, L.polyline(item.path, getLineStyle(item.transport))]).addTo(map);
-            }
-            if (hoverLayer && typeof hoverLayer.bringToFront === 'function') hoverLayer.bringToFront();
-        },
-        clearSingleEventHighlight: function() {
-            const tilePane = map.getPane('tilePane'); if (tilePane) tilePane.style.filter = '';
-            if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null;
-            if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1, fillOpacity: 1 }));
-        }
-    };
-
-    // =======================================================================
-    // V5.1 - 手機版互動模組 (獨立邏輯)
-    // =======================================================================
-    const mobileModule = {
-        currentSlider: null,
-        init: function() {
-            cardsContainer.addEventListener('click', this.handleDateHeaderClick);
-            document.getElementById('slider-info-card').addEventListener('click', (e) => {
-                if (e.target.id === 'slider-info-card' || e.target.classList.contains('handle')) {
-                    this.hideSliderUI();
-                }
+        render: function(groupedByDay, sortedDays) {
+            cardsContainer.innerHTML = '';
+            sortedDays.forEach(dayKey => {
+                const items = groupedByDay[dayKey];
+                const dateGroup = document.createElement('div');
+                dateGroup.className = 'map-date-group rounded-2xl shadow-md overflow-hidden';
+                dateGroup.dataset.day = dayKey;
+                let cardsHtml = items.map(item => {
+                    let c_class = "card cursor-pointer p-3 rounded-lg hover:ring-2 hover:ring-blue-400 shadow-sm";
+                    return `<div class="${c_class}" data-index="${item.originalIndex}">
+                        <div><h4 class="font-semibold text-gray-800">${item.title}</h4><p class="text-sm text-gray-500">${item.location||''}</p></div>
+                        <div class="details mt-2"><p class="text-sm text-gray-600">${item.description||''}</p></div>
+                    </div>`;
+                }).join('');
+                const titles = dailyTitles[dayKey] || { mainTitle: dayKey };
+                dateGroup.innerHTML = `
+                    <div class="date-header p-4 cursor-pointer flex justify-between items-center">
+                        <div><h3 class="text-lg font-bold">${titles.mainTitle}</h3></div>
+                        <svg class="expand-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </div>
+                    <div class="map-date-group-content p-3 space-y-2">${cardsHtml}</div>`;
+                cardsContainer.appendChild(dateGroup);
             });
         },
-        handleDateHeaderClick: function(e) {
-            const dateHeader = e.target.closest('.date-header');
-            if (!dateHeader) return;
-            const clickedGroup = dateHeader.closest('.map-date-group');
-            const isExpanded = clickedGroup.classList.contains('expanded');
-            
-            mobileModule.hideSliderUI();
-            document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded'));
-            
-            if (!isExpanded) {
-                clickedGroup.classList.add('expanded');
-                const dayKey = clickedGroup.dataset.day;
-                const items = processedTripData.filter(item => item.day === dayKey && (item.coords || (item.path && item.path.length > 0)));
-                if (items.length > 0) {
-                    mobileModule.currentSlider = new mobileModule.MobileTimelineSlider(clickedGroup.querySelector('.slider-wrapper'), items);
-                    mainPanel.style.height = '80px';
-                }
-                mobileModule.showDateOnMap(dayKey);
-            } else {
-                mainPanel.style.height = '';
-                clearMapHighlights();
-            }
-        },
-        showDateOnMap: function(day) {
-            clearMapHighlights();
-            const items = processedTripData.filter(item => item.day === day);
-            const layers = items.map(item => {
-                if (item.type === 'point' && item.coords) return getMarker(item);
-                if (item.type === 'line' && item.path) return L.polyline(item.path, getLineStyle(item.transport));
-                return null;
-            }).filter(Boolean);
-            if (layers.length > 0) {
-                activeLayer = L.featureGroup(layers).addTo(map);
-                const paddingBottom = (mobileModule.currentSlider ? 100 : mainPanel.offsetHeight) + 20;
-                map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50, 50], paddingBottom: paddingBottom });
-            }
-        },
-        showSingleEventHighlight: function(index) {
-            const item = processedTripData[index]; if (!item) return;
-            const tilePane = map.getPane('tilePane'); if (tilePane) tilePane.style.filter = 'brightness(0.6) grayscale(0.8)';
-            if (hoverLayer) map.removeLayer(hoverLayer);
-            if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05, fillOpacity: 0.2 }));
-            
-            if (item.type === 'point' && item.coords) {
-                hoverLayer = getMarker(item).addTo(map);
-            } else if (item.type === 'line' && item.path && item.path.length > 0) {
-                hoverLayer = L.polyline(item.path, getLineStyle(item.transport)).addTo(map);
-            }
-            if (hoverLayer && typeof hoverLayer.bringToFront === 'function') hoverLayer.bringToFront();
-        },
-        clearSingleEventHighlight: function() {
-            const tilePane = map.getPane('tilePane'); if (tilePane) tilePane.style.filter = '';
-            if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null;
-            if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1, fillOpacity: 1 }));
-        },
-        hideSliderUI: function() {
-            const sliderInfoCard = document.getElementById('slider-info-card');
-            if (sliderInfoCard) sliderInfoCard.classList.remove('visible');
-            if (mobileModule.currentSlider) { mobileModule.currentSlider.destroy(); mobileModule.currentSlider = null; }
-            document.querySelectorAll('.slider-wrapper').forEach(sw => sw.innerHTML = '');
-            mobileModule.clearSingleEventHighlight();
-        },
-        MobileTimelineSlider: class {
-            constructor(container, items) { this.container = container; this.items = items; this.currentIndex = 0; this.infoCard = document.getElementById('slider-info-card'); this.infoCardContent = document.getElementById('slider-info-card-content'); this.init(); this.bindEvents(); this.snapTo(0, false); }
-            init() {
-                const stopsHtml = this.items.map((_, i) => { const p = this.items.length === 1 ? 50 : (i / (this.items.length - 1)) * 100; return `<div class="slider-stop" style="left: ${p}%"></div>`; }).join('');
-                this.container.innerHTML = `<div class="slider-track">${stopsHtml}<div class="slider-thumb"><div id="slider-preview-tooltip"></div></div></div>`;
-                this.track = this.container.querySelector('.slider-track'); this.thumb = this.container.querySelector('.slider-thumb'); this.tooltip = this.container.querySelector('#slider-preview-tooltip');
-            }
-            bindEvents() { this.onTouchStart = this.onTouchStart.bind(this); this.onTouchMove = this.onTouchMove.bind(this); this.onTouchEnd = this.onTouchEnd.bind(this); this.thumb.addEventListener('touchstart', this.onTouchStart); }
-            onTouchStart(e) { this.infoCard.classList.remove('visible'); this.tooltip.style.opacity = '1'; this.tooltip.style.visibility = 'visible'; document.addEventListener('touchmove', this.onTouchMove, { passive: false }); document.addEventListener('touchend', this.onTouchEnd, { once: true }); }
-            onTouchMove(e) {
-                e.preventDefault(); const rect = this.track.getBoundingClientRect(); const percent = Math.max(0, Math.min(100, ((e.touches[0].clientX - rect.left) / rect.width) * 100));
-                this.thumb.style.left = `${percent}%`; const index = this.getIndexFromPercent(percent);
-                if (index !== this.currentIndex) { this.currentIndex = index; this.updateTooltip(); mobileModule.showSingleEventHighlight(this.items[this.currentIndex].originalIndex); }
-            }
-            onTouchEnd() { document.removeEventListener('touchmove', this.onTouchMove); this.tooltip.style.opacity = '0'; this.tooltip.style.visibility = 'hidden'; const percent = parseFloat(this.thumb.style.left); this.snapTo(this.getIndexFromPercent(percent)); }
-            getIndexFromPercent(p) { return Math.round(p / (100 / (this.items.length - 1 || 1))); }
-            snapTo(index, animate = true) {
-                if (!this.items[index]) return; this.currentIndex = index; const percent = this.items.length === 1 ? 50 : (index / (this.items.length - 1)) * 100;
-                this.thumb.style.transition = animate ? 'left 0.2s ease-out' : 'none'; this.thumb.style.left = `${percent}%`;
-                setTimeout(() => this.thumb.style.transition = '', animate ? 200 : 0);
-                this.updateInfoCard(); mobileModule.showSingleEventHighlight(this.items[this.currentIndex].originalIndex);
-            }
-            updateTooltip() { this.tooltip.textContent = this.items[this.currentIndex].title; }
-            updateInfoCard() { const item = this.items[this.currentIndex]; this.infoCardContent.innerHTML = `<h4 class="font-bold text-lg">${item.title}</h4><p class="text-sm text-gray-600">${item.location||''}</p><p class="text-sm text-gray-700 mt-2">${item.description||''}</p>`; this.infoCard.classList.add('visible'); }
-            destroy() { if (this.thumb) this.thumb.removeEventListener('touchstart', this.onTouchStart); this.container.innerHTML = ''; }
-        }
+        init: function() { /* Event listeners as in V5.1 */ },
+        showDateOnMap: function(day) { /* Logic from V5.1 */ },
+        showSingleEventHighlight: function(index) { /* Logic from V5.1 */ },
+        clearSingleEventHighlight: function() { /* Logic from V5.1 */ },
+        handleInteraction: function(e) { /* Logic from V5.1 */ }
     };
+    Object.assign(desktopModule, { // Populating the functions
+        init: function() { cardsContainer.addEventListener('click', this.handleInteraction); cardsContainer.addEventListener('mouseover', this.handleInteraction); cardsContainer.addEventListener('mouseout', this.handleInteraction); },
+        showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => (item.type === 'point' && item.coords) ? getMarker(item) : (item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50, 50], paddingBottomRight: [50, mainPanel.offsetWidth + 50] }); } },
+        showSingleEventHighlight: function(index) { const item = processedTripData[index]; if (!item) return; if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = 'brightness(0.6)'; if (hoverLayer) map.removeLayer(hoverLayer); if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05 })); if (item.type === 'point' && item.coords) { hoverLayer = getMarker(item).addTo(map); } else if (item.type === 'line' && item.path) { hoverLayer = L.featureGroup([getMarker({ ...item, coords: item.path[0] }), getMarker({ ...item, coords: item.path[item.path.length-1] }), L.polyline(item.path, getLineStyle(item.transport))]).addTo(map); } if (hoverLayer?.bringToFront) hoverLayer.bringToFront(); },
+        clearSingleEventHighlight: function() { if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = ''; if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null; if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1 })); },
+        handleInteraction: function(e) { if (e.type === 'click') { const dateHeader = e.target.closest('.date-header'); const card = e.target.closest('.card'); if (dateHeader) { const group = dateHeader.closest('.map-date-group'); if (!group) return; const isExpanded = group.classList.contains('expanded'); document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded')); if (!isExpanded) { group.classList.add('expanded'); desktopModule.showDateOnMap(group.dataset.day); } else { clearMapHighlights(); } } else if (card) { const wasActive = card.classList.contains('active'); document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active')); if (!wasActive) card.classList.add('active'); } } else if (e.type === 'mouseover') { const card = e.target.closest('.card'); if (card) desktopModule.showSingleEventHighlight(card.dataset.index); } else if (e.type === 'mouseout') { desktopModule.clearSingleEventHighlight(); } },
+    });
+
 
     // =======================================================================
-    // V5.1 - 主程式初始化
+    // V6.0 - 手機版互動模組 (T字佈局)
+    // =======================================================================
+    const mobileModule = {
+        render: function(groupedByDay, sortedDays) {
+            const tabsContainer = document.getElementById('mobile-date-tabs');
+            tabsContainer.innerHTML = '';
+            sortedDays.forEach(dayKey => {
+                const item = groupedByDay[dayKey][0];
+                const tab = document.createElement('div');
+                tab.className = 'mobile-date-tab';
+                tab.dataset.day = dayKey;
+                tab.innerHTML = `<div class="day-label">${dayKey}</div><div class="date-label">${dailyTitles[dayKey]?.mainTitle || dayKey}</div>`;
+                tabsContainer.appendChild(tab);
+            });
+            if (sortedDays.length > 0) {
+                this.renderCards(sortedDays[0]);
+                tabsContainer.firstChild.classList.add('active');
+            }
+        },
+        renderCards: function(dayKey) {
+            const cardsContainer = document.getElementById('mobile-cards-container');
+            const items = processedTripData.filter(item => item.day === dayKey);
+            cardsContainer.innerHTML = items.map(item => {
+                 let c_class = "card cursor-pointer p-3 rounded-lg shadow-sm";
+                 return `<div class="${c_class}" data-index="${item.originalIndex}">
+                     <div><h4 class="font-semibold text-gray-800">${item.title}</h4><p class="text-sm text-gray-500">${item.location||''}</p></div>
+                 </div>`;
+            }).join('');
+        },
+        init: function() {
+            document.getElementById('mobile-date-tabs').addEventListener('click', (e) => {
+                const tab = e.target.closest('.mobile-date-tab');
+                if (!tab || tab.classList.contains('active')) return;
+                document.querySelectorAll('.mobile-date-tab.active').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const dayKey = tab.dataset.day;
+                this.renderCards(dayKey);
+                this.showDateOnMap(dayKey);
+            });
+            document.getElementById('panel-handle').addEventListener('click', () => {
+                mainPanel.classList.toggle('panel-expanded');
+            });
+        },
+        showDateOnMap: function(day) {
+             clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => (item.type === 'point' && item.coords) ? getMarker(item) : (item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50,50], paddingBottom: mainPanel.offsetHeight + 20 }); }
+        }
+    };
+    
+    // =======================================================================
+    // V6.0 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
             desktopModule.init();
         } else {
+            document.getElementById('main-title').parentElement.parentElement.classList.add('hidden');
+            document.getElementById('map-btn').parentElement.parentElement.classList.add('hidden');
             mobileModule.init();
         }
-        
-        // 通用事件監聽
         tripSelector.addEventListener('change', e => { if(allTrips[e.target.value]) loadAndDisplayTrip(allTrips[e.target.value].dataUrl, allTrips[e.target.value].iconUrl); });
-        mapBtn.addEventListener('click', () => { mapView.classList.remove('hidden'); itineraryView.classList.add('hidden'); mapBtn.classList.add('bg-white', 'text-blue-600'); itineraryBtn.classList.remove('bg-white', 'text-blue-600'); });
-        itineraryBtn.addEventListener('click', () => { itineraryView.classList.remove('hidden'); mapView.classList.add('hidden'); itineraryBtn.classList.add('bg-white', 'text-blue-600'); mapBtn.classList.remove('bg-white', 'text-blue-600'); });
-
-        initializeTripSelector(); // 載入首筆旅程資料
+        initializeTripSelector();
     }
 
-    initializeApp(); // 啟動應用程式
+    initializeApp();
     </script>
 </body>
 </html>
-
