@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.1 修正版)</title>
+    <title>互動旅遊地圖 (V7.2 完整互動版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -31,7 +31,7 @@
             #main-panel:hover { max-height: calc(100vh - 2rem); }
         }
         
-        /* --- 手機版介面樣式 (V7.1) --- */
+        /* --- 手機版介面樣式 (V7.2) --- */
         @media (max-width: 767px) {
             #main-panel {
                 position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
@@ -42,7 +42,7 @@
                 transition: height 0.4s ease-in-out; 
             }
 
-            /* --- T字佈局樣式 (僅手機 V7.1) --- */
+            /* --- T字佈局樣式 (僅手機 V7.2) --- */
             #mobile-t-layout {
                 flex-grow: 1;
                 display: flex;
@@ -130,7 +130,7 @@
 
     <script>
     // =======================================================================
-    // V7.1 - 全域變數與通用函式
+    // V7.2 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -149,6 +149,33 @@
     function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
     function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleEl.textContent = '請選擇旅程'; }
 
+    // V7.2 抽出共用的卡片渲染函式，確保兩端體驗一致
+    function renderFullCardHTML(item) {
+        let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-3 shadow-sm";
+        let titleClasses = "font-semibold text-gray-800";
+        let locationClasses = "text-sm text-gray-500";
+        
+        // 可根據 item.type 調整樣式，此處為統一版本
+        if (item.type === 'line') {
+             titleClasses = "font-medium text-xs text-gray-600";
+             locationClasses = "text-xs text-gray-400";
+        }
+
+        return `<div class="${cardClasses}" data-index="${item.originalIndex}">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h4 class="${titleClasses}">${item.title}</h4>
+                    <p class="${locationClasses}">${item.location || ''}</p>
+                </div>
+            </div>
+            <div class="details mt-2">
+                <p class="text-sm text-gray-600">${item.description || ''}</p>
+                <p class="text-sm text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p>
+                <textarea class="w-full mt-2 p-2 border rounded-md text-sm" placeholder="在這裡新增您的筆記..."></textarea>
+            </div>
+        </div>`;
+    }
+
     async function loadAndDisplayTrip(dataLink, iconsLink) {
         resetUI(); mainTitleEl.textContent = "讀取中...";
         try {
@@ -162,7 +189,6 @@
             const groupedByDay = processedTripData.reduce((acc, item) => { (acc[item.day] = acc[item.day] || []).push(item); return acc; }, {});
             const sortedDays = Object.keys(groupedByDay).sort();
 
-            // V7.1 修正: 根據裝置只渲染對應的模組
             if (window.innerWidth >= 768) {
                 desktopModule.render(groupedByDay, sortedDays);
             } else {
@@ -187,7 +213,7 @@
     }
     
     // =======================================================================
-    // V7.1 - 桌面版互動模組 (基於 V3.7 穩定邏輯)
+    // V7.2 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -197,7 +223,7 @@
                 const items = groupedByDay[dayKey];
                 const dateGroup = document.createElement('div');
                 dateGroup.className = 'map-date-group rounded-2xl shadow-md overflow-hidden'; dateGroup.dataset.day = dayKey;
-                let cardsHtml = items.map(item => `<div class="card cursor-pointer p-3 rounded-lg hover:ring-2 hover:ring-blue-400 shadow-sm" data-index="${item.originalIndex}"><div><h4 class="font-semibold text-gray-800">${item.title}</h4><p class="text-sm text-gray-500">${item.location||''}</p></div><div class="details mt-2"><p class="text-sm text-gray-600">${item.description||''}</p></div></div>`).join('');
+                let cardsHtml = items.map(item => renderFullCardHTML(item)).join('');
                 const titles = dailyTitles[dayKey] || { mainTitle: dayKey };
                 dateGroup.innerHTML = `<div class="date-header p-4 cursor-pointer flex justify-between items-center"><div><h3 class="text-lg font-bold">${titles.mainTitle}</h3></div><svg class="expand-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div><div class="map-date-group-content p-3 space-y-2">${cardsHtml}</div>`;
                 container.appendChild(dateGroup);
@@ -213,7 +239,7 @@
     };
 
     // =======================================================================
-    // V7.1 - 手機版互動模組 (T字佈局)
+    // V7.2 - 手機版互動模組 (同步桌面版互動)
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -233,15 +259,11 @@
         renderCards: function(dayKey) {
             const container = document.getElementById('mobile-cards-container');
             const items = processedTripData.filter(item => item.day === dayKey);
-            container.innerHTML = items.map(item => `<div class="card cursor-pointer p-3 rounded-lg shadow-sm space-y-1" data-index="${item.originalIndex}"><div><h4 class="font-semibold text-gray-800 text-sm">${item.title}</h4><p class="text-xs text-gray-500">${item.location||''}</p></div><div class="details pt-1 border-t border-gray-200/50"><p class="text-xs text-gray-600">${item.description||''}</p></div></div>`).join('');
+            container.innerHTML = items.map(item => renderFullCardHTML(item)).join('');
         },
         init: function() {
             document.getElementById('mobile-date-tabs').addEventListener('click', this.handleTabClick);
             document.getElementById('mobile-cards-container').addEventListener('click', this.handleCardClick);
-            let touchTimeout;
-            const cardContainer = document.getElementById('mobile-cards-container');
-            cardContainer.addEventListener('touchstart', (e) => { const card = e.target.closest('.card'); if (card) { touchTimeout = setTimeout(() => { this.showSingleEventHighlight(card.dataset.index); }, 80); } });
-            cardContainer.addEventListener('touchend', () => { clearTimeout(touchTimeout); setTimeout(() => { if (!document.querySelector('#mobile-cards-container .card.active')) this.clearSingleEventHighlight(); }, 100); });
         },
         handleTabClick: function(e) {
             const tab = e.target.closest('.mobile-date-tab');
@@ -270,7 +292,7 @@
     };
     
     // =======================================================================
-    // V7.1 - 主程式初始化
+    // V7.2 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
