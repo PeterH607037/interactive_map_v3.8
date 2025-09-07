@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.11 緊湊佈局版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale-1.0, user-scalable=no">
+    <title>互動旅遊地圖 (V7.12 堆疊佈局版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -83,26 +83,30 @@
         <div id="main-panel">
             <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
 
-            <!-- V7.11 緊湊型頂部區塊 -->
+            <!-- V7.12 超緊湊堆疊式頂部 -->
             <div id="panel-top-section" class="flex-shrink-0 border-b border-gray-200/80">
-                <div class="px-3 py-1 md:p-4">
-                    <div class="flex justify-between items-center space-x-2">
-                        <header class="flex-grow min-w-0">
-                            <h1 id="main-title" class="text-base md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
-                            <p id="main-subtitle" class="text-xs md:text-sm text-gray-600 truncate"></p>
-                        </header>
-                        <div class="flex-shrink-0 w-2/5">
-                            <label for="trip-selector" class="sr-only">選擇一趟旅程</label>
-                            <select id="trip-selector" class="block w-full p-1 md:p-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-xs md:text-sm">
-                                <option value="">載入中...</option>
-                            </select>
-                        </div>
+                <!-- This container is a block on mobile, flex on desktop -->
+                <div class="md:flex md:justify-between md:items-center md:space-x-4 md:p-4">
+                    <!-- Block 1: Title (Mobile styles are default, desktop are md:) -->
+                    <header class="px-3 pt-1 pb-0.5 text-center md:text-left md:p-0 md:flex-grow md:min-w-0">
+                        <h1 id="main-title" class="text-sm md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
+                        <p id="main-subtitle" class="text-xs md:text-sm text-gray-600 truncate"></p>
+                    </header>
+        
+                    <!-- Block 2: Dropdown -->
+                    <div class="px-3 py-0.5 md:p-0 md:flex-shrink-0 md:w-2/5">
+                        <label for="trip-selector" class="sr-only">選擇一趟旅程</label>
+                        <select id="trip-selector" class="block w-full p-1 md:p-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-xs md:text-sm">
+                            <option value="">載入中...</option>
+                        </select>
                     </div>
                 </div>
-                <div class="py-1 px-2 md:p-2 bg-gray-200/50">
+        
+                <!-- Block 3: Buttons -->
+                <div class="py-1 px-2 md:p-2 md:bg-gray-200/50">
                     <div class="flex justify-center space-x-2 bg-gray-200 p-0.5 md:p-1 rounded-full w-full max-w-sm mx-auto">
-                        <button id="map-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
-                        <button id="itinerary-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
+                        <button id="map-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-[11px] md:text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
+                        <button id="itinerary-btn" class="w-full py-1 px-2 md:py-2 md:px-4 rounded-full text-[11px] md:text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
                     </div>
                 </div>
             </div>
@@ -119,7 +123,7 @@
 
     <script>
     // =======================================================================
-    // V7.11 - 全域變數與通用函式
+    // V7.12 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -219,7 +223,7 @@
     }
     
     // =======================================================================
-    // V7.11 - 桌面版互動模組
+    // V7.12 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -243,7 +247,7 @@
     };
 
     // =======================================================================
-    // V7.11 - 手機版互動模組
+    // V7.12 - 手機版互動模組
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -314,7 +318,7 @@
     };
     
     // =======================================================================
-    // V7.11 - 主程式初始化
+    // V7.12 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
