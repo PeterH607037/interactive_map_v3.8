@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V6.0 T字佈局)</title>
+    <title>互動旅遊地圖 (V7.1 修正版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -31,49 +31,50 @@
             #main-panel:hover { max-height: calc(100vh - 2rem); }
         }
         
-        /* --- 手機版介面樣式 (V6.0) --- */
+        /* --- 手機版介面樣式 (V7.1) --- */
         @media (max-width: 767px) {
             #main-panel {
                 position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
                 box-shadow: 0 -8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18);
                 display: flex; flex-direction: column; 
                 bottom: 0; left: 0; right: 0; width: 100%; border-radius: 1.5rem 1.5rem 0 0;
-                height: 45vh; /* 預設高度 */
+                height: 60vh; /* 預設高度 */
                 transition: height 0.4s ease-in-out; 
             }
-            #main-panel.panel-expanded { height: 85vh; /* 展開高度 */ }
-        }
-        
-        /* --- T字佈局樣式 (僅手機 V6.0) --- */
-        #mobile-t-layout { height: 100%; }
-        #mobile-date-tabs {
-            flex-shrink: 0; /* 防止被壓縮 */
-            width: 90px;
-            border-right: 1px solid rgba(255, 255, 255, 0.18);
-            overflow-y: auto;
-        }
-        .mobile-date-tab {
-            padding: 12px 8px; text-align: center; cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background-color 0.2s ease;
-        }
-        .mobile-date-tab:hover { background-color: rgba(255, 255, 255, 0.1); }
-        .mobile-date-tab.active { background-color: rgba(255, 255, 255, 0.2); font-weight: bold; }
-        .mobile-date-tab .day-label { font-size: 12px; font-weight: 500; color: #4b5563; }
-        .mobile-date-tab.active .day-label { color: #1e3a8a; }
-        .mobile-date-tab .date-label { font-size: 14px; font-weight: 700; color: #1f2937; }
 
-        #mobile-cards-container { overflow-y: auto; flex-grow: 1; }
+            /* --- T字佈局樣式 (僅手機 V7.1) --- */
+            #mobile-t-layout {
+                flex-grow: 1;
+                display: flex;
+                min-height: 0; /* Crucial for flex child scrolling */
+            }
+            #mobile-date-tabs {
+                flex-shrink: 0;
+                width: 90px;
+                border-right: 1px solid rgba(255, 255, 255, 0.18);
+                overflow-y: auto;
+            }
+            .mobile-date-tab {
+                padding: 12px 8px; text-align: center; cursor: pointer;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                transition: background-color 0.2s ease;
+            }
+            .mobile-date-tab:hover { background-color: rgba(255, 255, 255, 0.1); }
+            .mobile-date-tab.active { background-color: rgba(255, 255, 255, 0.2); }
+            .mobile-date-tab .day-label { font-size: 14px; font-weight: 700; color: #1f2937; }
+            .mobile-date-tab.active .day-label { color: #1e3a8a; }
+            .mobile-date-tab .date-label { font-size: 11px; font-weight: 500; color: #4b5563; }
 
-        #panel-handle {
-            height: 20px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; flex-shrink: 0;
+            #mobile-cards-container {
+                overflow-y: auto;
+                flex-grow: 1;
+                padding: 8px;
+            }
         }
-        #panel-handle .bar { width: 40px; height: 5px; background-color: rgba(0, 0, 0, 0.2); border-radius: 2.5px; }
 
-        /* --- V3.7 卡片與內容樣式 --- */
-        main { flex-grow: 1; overflow-y: auto; }
-        .map-date-group, .itinerary-date-group { background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px); }
+        /* --- V3.7 卡片與內容樣式 (共用) --- */
+        main { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
+        .map-date-group { background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px); }
         .date-header { background-color: rgba(255, 255, 255, 0.2); }
         .card { background-color: rgba(255, 255, 255, 0.3); }
         .map-date-group-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
@@ -83,7 +84,7 @@
         .expand-icon { transition: transform 0.5s ease-in-out; }
         .expanded .expand-icon { transform: rotate(180deg); }
 
-        /* --- V3.7 圖示樣式 --- */
+        /* --- V3.7 圖示樣式 (共用) --- */
         .custom-marker-icon { background-color: #ffffff; border: 2px solid #1d4ed8; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); position: relative; }
         .custom-marker-icon span { font-size: 22px; line-height: 1; }
         .custom-marker-icon::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #1d4ed8; }
@@ -95,8 +96,7 @@
     <div id="app-container">
         <div id="map"></div>
         <div id="main-panel">
-            <!-- 頂部通用區域 -->
-            <div class="p-4 border-b border-gray-200/80 flex-shrink-0 hidden md:block">
+            <div class="p-4 border-b border-gray-200/80 flex-shrink-0">
                 <header class="text-center">
                     <h1 id="main-title" class="text-xl md:text-2xl font-bold text-gray-900 truncate">讀取中...</h1>
                     <p id="main-subtitle" class="text-gray-600 mt-1 text-sm truncate"></p>
@@ -108,24 +108,21 @@
                     </select>
                 </div>
             </div>
-            <div class="flex-shrink-0 p-2 bg-gray-200/50 hidden md:block">
+            <div class="flex-shrink-0 p-2 bg-gray-200/50">
                 <div class="flex justify-center space-x-2 bg-gray-200 p-1 rounded-full w-full max-w-sm mx-auto">
                     <button id="map-btn" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 bg-white text-blue-600 shadow">互動地圖</button>
                     <button id="itinerary-btn" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
                 </div>
             </div>
 
-            <!-- V6.0 新增: 手機版面板把手 -->
-            <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
-
-            <main class="flex-grow flex flex-col min-h-0">
-                <!-- V6.0 桌面版容器 -->
+            <main>
+                <!-- 桌面版容器 -->
                 <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
 
-                <!-- V6.0 手機版 T字佈局容器 -->
-                <div id="mobile-t-layout" class="flex-grow flex md:hidden min-h-0">
+                <!-- 手機版 T字佈局容器 -->
+                <div id="mobile-t-layout" class="md:hidden">
                     <div id="mobile-date-tabs"></div>
-                    <div id="mobile-cards-container" class="p-2 space-y-2"></div>
+                    <div id="mobile-cards-container" class="space-y-2"></div>
                 </div>
             </main>
         </div>
@@ -133,13 +130,10 @@
 
     <script>
     // =======================================================================
-    // V6.0 - 全域變數與通用函式
+    // V7.1 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
-        mapBtn = document.getElementById('map-btn'), itineraryBtn = document.getElementById('itinerary-btn'),
-        mapView = document.getElementById('map-view'), itineraryView = document.getElementById('itinerary-view'),
-        cardsContainer = document.getElementById('cards-container'),
         mainTitleEl = document.getElementById('main-title'), mainSubtitleEl = document.getElementById('main-subtitle');
     
     const map = L.map('map', { zoomControl: false }).setView([12.8797, 121.7740], 6);
@@ -149,116 +143,86 @@
     
     const tripsMetaUrl = 'https://gist.githubusercontent.com/PeterH607037/8bbc0df6575d19f3767da0230d0e989d/raw/trip_gpx_meta2.json';
     const createEmojiIcon = (emoji) => L.divIcon({ html: `<div class="custom-marker-icon"><span>${emoji}</span></div>`, className: '', iconSize: [40, 46], iconAnchor: [20, 46] });
-    const getLineStyle = (transport) => { if (transport && transport.includes('步行')) return { color: '#3b82f6', weight: 3, dashArray: '3, 8' }; return { color: '#f97316', weight: 4 }; };
+    const getLineStyle = (transport) => { if (transport?.includes('步行')) return { color: '#3b82f6', weight: 3, dashArray: '3, 8' }; return { color: '#f97316', weight: 4 }; };
     const getMarker = (item) => L.marker(item.coords, { icon: icons[item.category] || icons.default });
     
     function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
-
-    function resetUI() { clearMapHighlights(); cardsContainer.innerHTML = ''; processedTripData = []; mainTitleEl.textContent = '請選擇旅程'; }
+    function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleEl.textContent = '請選擇旅程'; }
 
     async function loadAndDisplayTrip(dataLink, iconsLink) {
         resetUI(); mainTitleEl.textContent = "讀取中...";
         try {
             const [iconResponse, dataResponse] = await Promise.all([ fetch(iconsLink), fetch(dataLink) ]);
-            if (!iconResponse.ok || !dataResponse.ok) throw new Error(`讀取資料失敗`);
             const iconData = await iconResponse.json(); const tripData = await dataResponse.json();
             if (iconData.iconMapping) Object.keys(iconData.iconMapping).forEach(cat => icons[cat] = createEmojiIcon(iconData.iconMapping[cat]));
             icons.default = createEmojiIcon('📌'); dailyTitles = tripData.dailyTitles;
             processedTripData = tripData.tripData.map((item, i) => ({ ...item, originalIndex: i }));
-            mainTitleEl.textContent = tripData.mainTitle || "我的旅程";
-            mainSubtitleEl.textContent = tripData.mainSubtitle || "一段難忘的冒險";
+            mainTitleEl.textContent = tripData.mainTitle; mainSubtitleEl.textContent = tripData.mainSubtitle;
             
-            // 渲染介面
-            const groupedByDay = processedTripData.reduce((acc, item) => {
-                const day = item.day || 'misc'; (acc[day] = acc[day] || []).push(item); return acc;
-            }, {});
+            const groupedByDay = processedTripData.reduce((acc, item) => { (acc[item.day] = acc[item.day] || []).push(item); return acc; }, {});
             const sortedDays = Object.keys(groupedByDay).sort();
 
-            desktopModule.render(groupedByDay, sortedDays);
-            mobileModule.render(groupedByDay, sortedDays);
+            // V7.1 修正: 根據裝置只渲染對應的模組
+            if (window.innerWidth >= 768) {
+                desktopModule.render(groupedByDay, sortedDays);
+            } else {
+                mobileModule.render(groupedByDay, sortedDays);
+            }
 
-            // 初始地圖視圖
             setTimeout(() => {
                 if (sortedDays.length > 0) {
                     const firstDay = sortedDays[0];
-                    if (window.innerWidth >= 768) {
-                        desktopModule.showDateOnMap(firstDay);
-                        const firstGroup = document.querySelector('.map-date-group');
-                        if(firstGroup) firstGroup.classList.add('expanded');
-                    } else {
-                        mobileModule.showDateOnMap(firstDay);
-                    }
+                    window.innerWidth >= 768 ? desktopModule.showDateOnMap(firstDay) : mobileModule.showDateOnMap(firstDay);
                 }
             }, 100);
         } catch (error) { console.error("載入旅程錯誤:", error); mainTitleEl.textContent = "資料載入失敗"; }
     }
 
     async function initializeTripSelector() {
-        try {
-            const response = await fetch(tripsMetaUrl);
-            const metaData = await response.json(); allTrips = metaData.trips || [];
-            tripSelector.innerHTML = '';
-            allTrips.forEach((trip, i) => tripSelector.innerHTML += `<option value="${i}">${trip.tripName}</option>`);
-            if (allTrips.length > 0) loadAndDisplayTrip(allTrips[0].dataUrl, allTrips[0].iconUrl);
-        } catch (error) { console.error("初始化旅程選擇器錯誤:", error); }
+        const response = await fetch(tripsMetaUrl);
+        const metaData = await response.json(); allTrips = metaData.trips || [];
+        tripSelector.innerHTML = '';
+        allTrips.forEach((trip, i) => tripSelector.innerHTML += `<option value="${i}">${trip.tripName}</option>`);
+        if (allTrips.length > 0) loadAndDisplayTrip(allTrips[0].dataUrl, allTrips[0].iconUrl);
     }
     
     // =======================================================================
-    // V6.0 - 桌面版互動模組 (基於 V3.7 穩定邏輯)
+    // V7.1 - 桌面版互動模組 (基於 V3.7 穩定邏輯)
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
-            cardsContainer.innerHTML = '';
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
             sortedDays.forEach(dayKey => {
                 const items = groupedByDay[dayKey];
                 const dateGroup = document.createElement('div');
-                dateGroup.className = 'map-date-group rounded-2xl shadow-md overflow-hidden';
-                dateGroup.dataset.day = dayKey;
-                let cardsHtml = items.map(item => {
-                    let c_class = "card cursor-pointer p-3 rounded-lg hover:ring-2 hover:ring-blue-400 shadow-sm";
-                    return `<div class="${c_class}" data-index="${item.originalIndex}">
-                        <div><h4 class="font-semibold text-gray-800">${item.title}</h4><p class="text-sm text-gray-500">${item.location||''}</p></div>
-                        <div class="details mt-2"><p class="text-sm text-gray-600">${item.description||''}</p></div>
-                    </div>`;
-                }).join('');
+                dateGroup.className = 'map-date-group rounded-2xl shadow-md overflow-hidden'; dateGroup.dataset.day = dayKey;
+                let cardsHtml = items.map(item => `<div class="card cursor-pointer p-3 rounded-lg hover:ring-2 hover:ring-blue-400 shadow-sm" data-index="${item.originalIndex}"><div><h4 class="font-semibold text-gray-800">${item.title}</h4><p class="text-sm text-gray-500">${item.location||''}</p></div><div class="details mt-2"><p class="text-sm text-gray-600">${item.description||''}</p></div></div>`).join('');
                 const titles = dailyTitles[dayKey] || { mainTitle: dayKey };
-                dateGroup.innerHTML = `
-                    <div class="date-header p-4 cursor-pointer flex justify-between items-center">
-                        <div><h3 class="text-lg font-bold">${titles.mainTitle}</h3></div>
-                        <svg class="expand-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
-                    </div>
-                    <div class="map-date-group-content p-3 space-y-2">${cardsHtml}</div>`;
-                cardsContainer.appendChild(dateGroup);
+                dateGroup.innerHTML = `<div class="date-header p-4 cursor-pointer flex justify-between items-center"><div><h3 class="text-lg font-bold">${titles.mainTitle}</h3></div><svg class="expand-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div><div class="map-date-group-content p-3 space-y-2">${cardsHtml}</div>`;
+                container.appendChild(dateGroup);
             });
+            const firstGroup = container.querySelector('.map-date-group');
+            if (firstGroup) firstGroup.classList.add('expanded');
         },
-        init: function() { /* Event listeners as in V5.1 */ },
-        showDateOnMap: function(day) { /* Logic from V5.1 */ },
-        showSingleEventHighlight: function(index) { /* Logic from V5.1 */ },
-        clearSingleEventHighlight: function() { /* Logic from V5.1 */ },
-        handleInteraction: function(e) { /* Logic from V5.1 */ }
-    };
-    Object.assign(desktopModule, { // Populating the functions
-        init: function() { cardsContainer.addEventListener('click', this.handleInteraction); cardsContainer.addEventListener('mouseover', this.handleInteraction); cardsContainer.addEventListener('mouseout', this.handleInteraction); },
-        showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => (item.type === 'point' && item.coords) ? getMarker(item) : (item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50, 50], paddingBottomRight: [50, mainPanel.offsetWidth + 50] }); } },
+        init: function() { const container = document.getElementById('cards-container'); container.addEventListener('click', this.handleInteraction); container.addEventListener('mouseover', this.handleInteraction); container.addEventListener('mouseout', this.handleInteraction); },
+        showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => ((item.type === 'point' && item.coords) ? getMarker(item) : ((item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null))).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50, 50], paddingBottomRight: [50, mainPanel.offsetWidth + 50] }); } },
         showSingleEventHighlight: function(index) { const item = processedTripData[index]; if (!item) return; if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = 'brightness(0.6)'; if (hoverLayer) map.removeLayer(hoverLayer); if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05 })); if (item.type === 'point' && item.coords) { hoverLayer = getMarker(item).addTo(map); } else if (item.type === 'line' && item.path) { hoverLayer = L.featureGroup([getMarker({ ...item, coords: item.path[0] }), getMarker({ ...item, coords: item.path[item.path.length-1] }), L.polyline(item.path, getLineStyle(item.transport))]).addTo(map); } if (hoverLayer?.bringToFront) hoverLayer.bringToFront(); },
         clearSingleEventHighlight: function() { if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = ''; if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null; if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1 })); },
         handleInteraction: function(e) { if (e.type === 'click') { const dateHeader = e.target.closest('.date-header'); const card = e.target.closest('.card'); if (dateHeader) { const group = dateHeader.closest('.map-date-group'); if (!group) return; const isExpanded = group.classList.contains('expanded'); document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded')); if (!isExpanded) { group.classList.add('expanded'); desktopModule.showDateOnMap(group.dataset.day); } else { clearMapHighlights(); } } else if (card) { const wasActive = card.classList.contains('active'); document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active')); if (!wasActive) card.classList.add('active'); } } else if (e.type === 'mouseover') { const card = e.target.closest('.card'); if (card) desktopModule.showSingleEventHighlight(card.dataset.index); } else if (e.type === 'mouseout') { desktopModule.clearSingleEventHighlight(); } },
-    });
-
+    };
 
     // =======================================================================
-    // V6.0 - 手機版互動模組 (T字佈局)
+    // V7.1 - 手機版互動模組 (T字佈局)
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
             const tabsContainer = document.getElementById('mobile-date-tabs');
             tabsContainer.innerHTML = '';
             sortedDays.forEach(dayKey => {
-                const item = groupedByDay[dayKey][0];
                 const tab = document.createElement('div');
-                tab.className = 'mobile-date-tab';
-                tab.dataset.day = dayKey;
-                tab.innerHTML = `<div class="day-label">${dayKey}</div><div class="date-label">${dailyTitles[dayKey]?.mainTitle || dayKey}</div>`;
+                tab.className = 'mobile-date-tab'; tab.dataset.day = dayKey;
+                tab.innerHTML = `<div class="day-label">${dailyTitles[dayKey]?.mainTitle || dayKey}</div><div class="date-label">${dayKey}</div>`;
                 tabsContainer.appendChild(tab);
             });
             if (sortedDays.length > 0) {
@@ -267,43 +231,51 @@
             }
         },
         renderCards: function(dayKey) {
-            const cardsContainer = document.getElementById('mobile-cards-container');
+            const container = document.getElementById('mobile-cards-container');
             const items = processedTripData.filter(item => item.day === dayKey);
-            cardsContainer.innerHTML = items.map(item => {
-                 let c_class = "card cursor-pointer p-3 rounded-lg shadow-sm";
-                 return `<div class="${c_class}" data-index="${item.originalIndex}">
-                     <div><h4 class="font-semibold text-gray-800">${item.title}</h4><p class="text-sm text-gray-500">${item.location||''}</p></div>
-                 </div>`;
-            }).join('');
+            container.innerHTML = items.map(item => `<div class="card cursor-pointer p-3 rounded-lg shadow-sm space-y-1" data-index="${item.originalIndex}"><div><h4 class="font-semibold text-gray-800 text-sm">${item.title}</h4><p class="text-xs text-gray-500">${item.location||''}</p></div><div class="details pt-1 border-t border-gray-200/50"><p class="text-xs text-gray-600">${item.description||''}</p></div></div>`).join('');
         },
         init: function() {
-            document.getElementById('mobile-date-tabs').addEventListener('click', (e) => {
-                const tab = e.target.closest('.mobile-date-tab');
-                if (!tab || tab.classList.contains('active')) return;
-                document.querySelectorAll('.mobile-date-tab.active').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                const dayKey = tab.dataset.day;
-                this.renderCards(dayKey);
-                this.showDateOnMap(dayKey);
-            });
-            document.getElementById('panel-handle').addEventListener('click', () => {
-                mainPanel.classList.toggle('panel-expanded');
-            });
+            document.getElementById('mobile-date-tabs').addEventListener('click', this.handleTabClick);
+            document.getElementById('mobile-cards-container').addEventListener('click', this.handleCardClick);
+            let touchTimeout;
+            const cardContainer = document.getElementById('mobile-cards-container');
+            cardContainer.addEventListener('touchstart', (e) => { const card = e.target.closest('.card'); if (card) { touchTimeout = setTimeout(() => { this.showSingleEventHighlight(card.dataset.index); }, 80); } });
+            cardContainer.addEventListener('touchend', () => { clearTimeout(touchTimeout); setTimeout(() => { if (!document.querySelector('#mobile-cards-container .card.active')) this.clearSingleEventHighlight(); }, 100); });
         },
-        showDateOnMap: function(day) {
-             clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => (item.type === 'point' && item.coords) ? getMarker(item) : (item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50,50], paddingBottom: mainPanel.offsetHeight + 20 }); }
-        }
+        handleTabClick: function(e) {
+            const tab = e.target.closest('.mobile-date-tab');
+            if (!tab || tab.classList.contains('active')) return;
+            document.querySelectorAll('.mobile-date-tab.active').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const dayKey = tab.dataset.day;
+            mobileModule.renderCards(dayKey);
+            mobileModule.showDateOnMap(dayKey);
+        },
+        handleCardClick: function(e) {
+            const card = e.target.closest('.card');
+            if (!card) return;
+            const wasActive = card.classList.contains('active');
+            document.querySelectorAll('#mobile-cards-container .card.active').forEach(c => c.classList.remove('active'));
+            if (!wasActive) {
+                card.classList.add('active');
+                mobileModule.showSingleEventHighlight(card.dataset.index);
+            } else {
+                mobileModule.clearSingleEventHighlight();
+            }
+        },
+        showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => ((item.type === 'point' && item.coords) ? getMarker(item) : ((item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null))).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50,50], paddingBottom: mainPanel.offsetHeight + 20 }); } },
+        showSingleEventHighlight: function(index) { const item = processedTripData[index]; if (!item) return; if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = 'brightness(0.6)'; if (hoverLayer) map.removeLayer(hoverLayer); if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05 })); if (item.type === 'point' && item.coords) { hoverLayer = getMarker(item).addTo(map); } else if (item.type === 'line' && item.path) { hoverLayer = L.featureGroup([getMarker({ ...item, coords: item.path[0] }), getMarker({ ...item, coords: item.path[item.path.length-1] }), L.polyline(item.path, getLineStyle(item.transport))]).addTo(map); } if (hoverLayer?.bringToFront) hoverLayer.bringToFront(); },
+        clearSingleEventHighlight: function() { if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = ''; if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null; if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1 })); },
     };
     
     // =======================================================================
-    // V6.0 - 主程式初始化
+    // V7.1 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
             desktopModule.init();
         } else {
-            document.getElementById('main-title').parentElement.parentElement.classList.add('hidden');
-            document.getElementById('map-btn').parentElement.parentElement.classList.add('hidden');
             mobileModule.init();
         }
         tripSelector.addEventListener('change', e => { if(allTrips[e.target.value]) loadAndDisplayTrip(allTrips[e.target.value].dataUrl, allTrips[e.target.value].iconUrl); });
@@ -314,3 +286,4 @@
     </script>
 </body>
 </html>
+
