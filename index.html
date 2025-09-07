@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.3 修正版)</title>
+    <title>互動旅遊地圖 (V7.4 互動修正版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -31,7 +31,7 @@
             #main-panel:hover { max-height: calc(100vh - 2rem); }
         }
         
-        /* --- 手機版介面樣式 (V7.3) --- */
+        /* --- 手機版介面樣式 --- */
         @media (max-width: 767px) {
             #main-panel {
                 position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
@@ -42,7 +42,7 @@
                 transition: height 0.4s ease-in-out; 
             }
 
-            /* --- T字佈局樣式 (僅手機 V7.3) --- */
+            /* --- T字佈局樣式 (僅手機) --- */
             #mobile-date-tabs {
                 flex-shrink: 0;
                 width: 90px;
@@ -110,12 +110,11 @@
                 </div>
             </div>
 
-            <!-- V7.3 修正: 為 main 添加 flex 佈局 class -->
             <main class="flex-grow flex flex-col min-h-0">
                 <!-- 桌面版容器 -->
                 <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
 
-                <!-- 手機版 T字佈局容器, V7.3 修正: 添加 flex 佈局 class -->
+                <!-- 手機版 T字佈局容器 -->
                 <div id="mobile-t-layout" class="md:hidden flex flex-grow min-h-0">
                     <div id="mobile-date-tabs"></div>
                     <div id="mobile-cards-container" class="space-y-2"></div>
@@ -126,7 +125,7 @@
 
     <script>
     // =======================================================================
-    // V7.3 - 全域變數與通用函式
+    // V7.4 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -144,34 +143,35 @@
     
     function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
     function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleEl.textContent = '請選擇旅程'; }
-
-    // V7.3 共用的卡片渲染函式
     function renderFullCardHTML(item) {
         let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-3 shadow-sm";
         let titleClasses = "font-semibold text-gray-800";
         let locationClasses = "text-sm text-gray-500";
-        
-        if (item.type === 'line') {
-             cardClasses += " hover:bg-slate-200/50";
-             titleClasses = "font-medium text-xs text-gray-600";
-             locationClasses = "text-xs text-gray-400";
-        } else {
-             cardClasses += " hover:ring-2 hover:ring-blue-400";
-        }
+        if (item.type === 'line') { cardClasses += " hover:bg-slate-200/50"; titleClasses = "font-medium text-xs text-gray-600"; locationClasses = "text-xs text-gray-400"; } 
+        else { cardClasses += " hover:ring-2 hover:ring-blue-400"; }
+        return `<div class="${cardClasses}" data-index="${item.originalIndex}"><div class="flex justify-between items-center"><div><h4 class="${titleClasses}">${item.title}</h4><p class="${locationClasses}">${item.location || ''}</p></div></div><div class="details mt-2"><p class="text-sm text-gray-600">${item.description || ''}</p><p class="text-sm text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p><textarea class="w-full mt-2 p-2 border rounded-md text-sm" placeholder="在這裡新增您的筆記..."></textarea></div></div>`;
+    }
 
-        return `<div class="${cardClasses}" data-index="${item.originalIndex}">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h4 class="${titleClasses}">${item.title}</h4>
-                    <p class="${locationClasses}">${item.location || ''}</p>
-                </div>
-            </div>
-            <div class="details mt-2">
-                <p class="text-sm text-gray-600">${item.description || ''}</p>
-                <p class="text-sm text-gray-500 mt-1">${item.time ? `時間: ${item.time}` : ''}</p>
-                <textarea class="w-full mt-2 p-2 border rounded-md text-sm" placeholder="在這裡新增您的筆記..."></textarea>
-            </div>
-        </div>`;
+    // V7.4 提取共用的聚光燈效果函式
+    function showSingleEventHighlight(index) {
+        const item = processedTripData[index]; if (!item) return;
+        const tilePane = map.getPane('tilePane');
+        if (tilePane) tilePane.style.filter = 'brightness(0.6) grayscale(0.8)';
+        if (hoverLayer) map.removeLayer(hoverLayer);
+        if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05, fillOpacity: 0.2 }));
+        if (item.type === 'point' && item.coords) {
+            hoverLayer = getMarker(item).addTo(map);
+        } else if (item.type === 'line' && item.path) {
+            hoverLayer = L.featureGroup([getMarker({ ...item, coords: item.path[0] }), getMarker({ ...item, coords: item.path[item.path.length-1] }), L.polyline(item.path, getLineStyle(item.transport))]).addTo(map);
+        }
+        if (hoverLayer?.bringToFront) hoverLayer.bringToFront();
+    }
+
+    function clearSingleEventHighlight() {
+        const tilePane = map.getPane('tilePane');
+        if (tilePane) tilePane.style.filter = '';
+        if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null;
+        if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1, fillOpacity: 1 }));
     }
 
     async function loadAndDisplayTrip(dataLink, iconsLink) {
@@ -211,7 +211,7 @@
     }
     
     // =======================================================================
-    // V7.3 - 桌面版互動模組
+    // V7.4 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -231,13 +231,11 @@
         },
         init: function() { const container = document.getElementById('cards-container'); container.addEventListener('click', this.handleInteraction); container.addEventListener('mouseover', this.handleInteraction); container.addEventListener('mouseout', this.handleInteraction); },
         showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => ((item.type === 'point' && item.coords) ? getMarker(item) : ((item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null))).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50, 50], paddingBottomRight: [50, mainPanel.offsetWidth + 50] }); } },
-        showSingleEventHighlight: function(index) { const item = processedTripData[index]; if (!item) return; if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = 'brightness(0.6)'; if (hoverLayer) map.removeLayer(hoverLayer); if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05 })); if (item.type === 'point' && item.coords) { hoverLayer = getMarker(item).addTo(map); } else if (item.type === 'line' && item.path) { hoverLayer = L.featureGroup([getMarker({ ...item, coords: item.path[0] }), getMarker({ ...item, coords: item.path[item.path.length-1] }), L.polyline(item.path, getLineStyle(item.transport))]).addTo(map); } if (hoverLayer?.bringToFront) hoverLayer.bringToFront(); },
-        clearSingleEventHighlight: function() { if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = ''; if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null; if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1 })); },
-        handleInteraction: function(e) { if (e.type === 'click') { const dateHeader = e.target.closest('.date-header'); const card = e.target.closest('.card'); if (dateHeader) { const group = dateHeader.closest('.map-date-group'); if (!group) return; const isExpanded = group.classList.contains('expanded'); document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded')); if (!isExpanded) { group.classList.add('expanded'); desktopModule.showDateOnMap(group.dataset.day); } else { clearMapHighlights(); } } else if (card) { const wasActive = card.classList.contains('active'); document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active')); if (!wasActive) card.classList.add('active'); } } else if (e.type === 'mouseover') { const card = e.target.closest('.card'); if (card) desktopModule.showSingleEventHighlight(card.dataset.index); } else if (e.type === 'mouseout') { desktopModule.clearSingleEventHighlight(); } },
+        handleInteraction: function(e) { if (e.type === 'click') { const dateHeader = e.target.closest('.date-header'); const card = e.target.closest('.card'); if (dateHeader) { const group = dateHeader.closest('.map-date-group'); if (!group) return; const isExpanded = group.classList.contains('expanded'); document.querySelectorAll('.map-date-group.expanded').forEach(g => g.classList.remove('expanded')); if (!isExpanded) { group.classList.add('expanded'); desktopModule.showDateOnMap(group.dataset.day); } else { clearMapHighlights(); } } else if (card) { const wasActive = card.classList.contains('active'); document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active')); if (!wasActive) card.classList.add('active'); } } else if (e.type === 'mouseover') { const card = e.target.closest('.card'); if (card) showSingleEventHighlight(card.dataset.index); } else if (e.type === 'mouseout') { clearSingleEventHighlight(); } },
     };
 
     // =======================================================================
-    // V7.3 - 手機版互動模組 (同步桌面版互動)
+    // V7.4 - 手機版互動模組
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -279,18 +277,16 @@
             document.querySelectorAll('#mobile-cards-container .card.active').forEach(c => c.classList.remove('active'));
             if (!wasActive) {
                 card.classList.add('active');
-                mobileModule.showSingleEventHighlight(card.dataset.index);
+                showSingleEventHighlight(card.dataset.index); // V7.4 呼叫通用函式
             } else {
-                mobileModule.clearSingleEventHighlight();
+                clearSingleEventHighlight(); // V7.4 呼叫通用函式
             }
         },
         showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => ((item.type === 'point' && item.coords) ? getMarker(item) : ((item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null))).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50,50], paddingBottom: mainPanel.offsetHeight + 20 }); } },
-        showSingleEventHighlight: function(index) { const item = processedTripData[index]; if (!item) return; if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = 'brightness(0.6)'; if (hoverLayer) map.removeLayer(hoverLayer); if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(0.05) : l.setStyle?.({ opacity: 0.05 })); if (item.type === 'point' && item.coords) { hoverLayer = getMarker(item).addTo(map); } else if (item.type === 'line' && item.path) { hoverLayer = L.featureGroup([getMarker({ ...item, coords: item.path[0] }), getMarker({ ...item, coords: item.path[item.path.length-1] }), L.polyline(item.path, getLineStyle(item.transport))]).addTo(map); } if (hoverLayer?.bringToFront) hoverLayer.bringToFront(); },
-        clearSingleEventHighlight: function() { if (map.getPane('tilePane')) map.getPane('tilePane').style.filter = ''; if (hoverLayer) map.removeLayer(hoverLayer); hoverLayer = null; if (activeLayer) activeLayer.eachLayer(l => l.setOpacity ? l.setOpacity(1) : l.setStyle?.({ opacity: 1 })); },
     };
     
     // =======================================================================
-    // V7.3 - 主程式初始化
+    // V7.4 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
