@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.5 最終修正版)</title>
+    <title>互動旅遊地圖 (V7.7 最終修正版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -41,32 +41,20 @@
                 height: 60vh; /* 預設高度 */
                 transition: height 0.4s ease-in-out; 
             }
+            #main-panel.panel-expanded { height: 85vh; }
 
             /* --- T字佈局樣式 (僅手機) --- */
-            #mobile-date-tabs {
-                flex-shrink: 0;
-                width: 90px;
-                border-right: 1px solid rgba(255, 255, 255, 0.18);
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            .mobile-date-tab {
-                padding: 12px 8px; text-align: center; cursor: pointer;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                transition: background-color 0.2s ease;
-            }
+            #mobile-date-tabs { flex-shrink: 0; width: 90px; border-right: 1px solid rgba(255, 255, 255, 0.18); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+            .mobile-date-tab { padding: 12px 8px; text-align: center; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.1); transition: background-color 0.2s ease; }
             .mobile-date-tab:hover { background-color: rgba(255, 255, 255, 0.1); }
             .mobile-date-tab.active { background-color: rgba(255, 255, 255, 0.2); }
             .mobile-date-tab .day-label { font-size: 14px; font-weight: 700; color: #1f2937; }
             .mobile-date-tab.active .day-label { color: #1e3a8a; }
             .mobile-date-tab .date-label { font-size: 11px; font-weight: 500; color: #4b5563; }
+            #mobile-cards-container { overflow-y: auto; flex-grow: 1; padding: 8px; -webkit-overflow-scrolling: touch; }
 
-            #mobile-cards-container {
-                overflow-y: auto;
-                flex-grow: 1;
-                padding: 8px;
-                -webkit-overflow-scrolling: touch;
-            }
+            #panel-handle { height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+            #panel-handle .bar { width: 40px; height: 5px; background-color: rgba(0, 0, 0, 0.2); border-radius: 2.5px; }
         }
 
         /* --- V3.7 卡片與內容樣式 (共用) --- */
@@ -111,12 +99,11 @@
                     <button id="itinerary-btn" class="w-full py-2 px-4 rounded-full text-sm font-semibold transition-colors duration-300 text-gray-600">詳細行程</button>
                 </div>
             </div>
+            
+            <div id="panel-handle" class="md:hidden"> <div class="bar"></div> </div>
 
             <main class="flex-grow flex flex-col min-h-0">
-                <!-- 桌面版容器 -->
                 <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
-
-                <!-- 手機版 T字佈局容器 -->
                 <div id="mobile-t-layout" class="md:hidden flex-grow flex min-h-0">
                     <div id="mobile-date-tabs"></div>
                     <div id="mobile-cards-container" class="space-y-2"></div>
@@ -127,7 +114,7 @@
 
     <script>
     // =======================================================================
-    // V7.5 - 全域變數與通用函式
+    // V7.7 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -212,7 +199,7 @@
     }
     
     // =======================================================================
-    // V7.5 - 桌面版互動模組
+    // V7.7 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -236,7 +223,7 @@
     };
 
     // =======================================================================
-    // V7.5 - 手機版互動模組 (全新獨立邏輯)
+    // V7.7 - 手機版互動模組 (全新獨立邏輯)
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -261,6 +248,14 @@
         init: function() {
             document.getElementById('mobile-date-tabs').addEventListener('click', this.handleTabClick);
             document.getElementById('mobile-cards-container').addEventListener('click', this.handleCardClick);
+            document.getElementById('panel-handle').addEventListener('click', this.togglePanel);
+        },
+        togglePanel: function() {
+            mainPanel.classList.toggle('panel-expanded');
+            const activeTab = document.querySelector('.mobile-date-tab.active');
+            if (activeTab) {
+                setTimeout(() => mobileModule.showDateOnMap(activeTab.dataset.day), 400); 
+            }
         },
         handleTabClick: function(e) {
             const tab = e.target.closest('.mobile-date-tab');
@@ -274,25 +269,39 @@
         handleCardClick: function(e) {
             const card = e.target.closest('.card');
             if (!card) return;
-            const wasActive = card.classList.contains('active');
-            const cardIndex = card.dataset.index;
-            
-            // 無論如何，先清除所有現有的 active 狀態和高亮
-            document.querySelectorAll('#mobile-cards-container .card.active').forEach(c => c.classList.remove('active'));
-            clearSingleEventHighlight();
 
-            // 如果點擊的卡片不是剛才 active 的那個，就把它設為 active 並高亮
-            if (!wasActive) {
-                card.classList.add('active');
-                showSingleEventHighlight(cardIndex);
+            const currentlyActiveCard = document.querySelector('#mobile-cards-container .card.active');
+            const cardIndex = card.dataset.index;
+
+            // Case 1: A different card was active, so deactivate it.
+            if (currentlyActiveCard && currentlyActiveCard !== card) {
+                currentlyActiveCard.classList.remove('active');
             }
-            // 如果點擊的是剛才 active 的卡片，上面的清除步驟已經處理了所有事，這裡什麼都不用做
+
+            // Case 2: Toggle the clicked card's active state.
+            const wasActive = card.classList.contains('active');
+            card.classList.toggle('active');
+
+            // Case 3: Update map highlight based on the new state.
+            if (!wasActive) { // Card is now active
+                showSingleEventHighlight(cardIndex);
+            } else { // Card is now inactive
+                clearSingleEventHighlight();
+            }
         },
-        showDateOnMap: function(day) { clearMapHighlights(); const items = processedTripData.filter(item => item.day === day); const layers = items.map(item => ((item.type === 'point' && item.coords) ? getMarker(item) : ((item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null))).filter(Boolean); if (layers.length > 0) { activeLayer = L.featureGroup(layers).addTo(map); map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50,50], paddingBottom: mainPanel.offsetHeight + 20 }); } },
+        showDateOnMap: function(day) { 
+            clearMapHighlights(); 
+            const items = processedTripData.filter(item => item.day === day); 
+            const layers = items.map(item => ((item.type === 'point' && item.coords) ? getMarker(item) : ((item.type === 'line' && item.path) ? L.polyline(item.path, getLineStyle(item.transport)) : null))).filter(Boolean); 
+            if (layers.length > 0) { 
+                activeLayer = L.featureGroup(layers).addTo(map); 
+                map.flyToBounds(activeLayer.getBounds(), { maxZoom: 14, padding: [50,50], paddingBottom: mainPanel.offsetHeight + 20 }); 
+            } 
+        },
     };
     
     // =======================================================================
-    // V7.5 - 主程式初始化
+    // V7.7 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
