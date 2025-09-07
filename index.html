@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>互動旅遊地圖 (V7.2 完整互動版)</title>
+    <title>互動旅遊地圖 (V7.3 修正版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeafletJS Map Library -->
@@ -31,7 +31,7 @@
             #main-panel:hover { max-height: calc(100vh - 2rem); }
         }
         
-        /* --- 手機版介面樣式 (V7.2) --- */
+        /* --- 手機版介面樣式 (V7.3) --- */
         @media (max-width: 767px) {
             #main-panel {
                 position: absolute; z-index: 10; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(3px);
@@ -42,12 +42,7 @@
                 transition: height 0.4s ease-in-out; 
             }
 
-            /* --- T字佈局樣式 (僅手機 V7.2) --- */
-            #mobile-t-layout {
-                flex-grow: 1;
-                display: flex;
-                min-height: 0; /* Crucial for flex child scrolling */
-            }
+            /* --- T字佈局樣式 (僅手機 V7.3) --- */
             #mobile-date-tabs {
                 flex-shrink: 0;
                 width: 90px;
@@ -115,12 +110,13 @@
                 </div>
             </div>
 
-            <main>
+            <!-- V7.3 修正: 為 main 添加 flex 佈局 class -->
+            <main class="flex-grow flex flex-col min-h-0">
                 <!-- 桌面版容器 -->
                 <div id="cards-container" class="p-2 md:p-4 space-y-4 hidden md:block overflow-y-auto"></div>
 
-                <!-- 手機版 T字佈局容器 -->
-                <div id="mobile-t-layout" class="md:hidden">
+                <!-- 手機版 T字佈局容器, V7.3 修正: 添加 flex 佈局 class -->
+                <div id="mobile-t-layout" class="md:hidden flex flex-grow min-h-0">
                     <div id="mobile-date-tabs"></div>
                     <div id="mobile-cards-container" class="space-y-2"></div>
                 </div>
@@ -130,7 +126,7 @@
 
     <script>
     // =======================================================================
-    // V7.2 - 全域變數與通用函式
+    // V7.3 - 全域變數與通用函式
     // =======================================================================
     let allTrips = [], processedTripData = [], dailyTitles = {}, icons = {};
     const mainPanel = document.getElementById('main-panel'), tripSelector = document.getElementById('trip-selector'),
@@ -149,16 +145,18 @@
     function clearMapHighlights() { if (activeLayer) map.removeLayer(activeLayer); if (hoverLayer) map.removeLayer(hoverLayer); activeLayer = null; hoverLayer = null; }
     function resetUI() { clearMapHighlights(); processedTripData = []; document.getElementById('cards-container').innerHTML = ''; document.getElementById('mobile-date-tabs').innerHTML = ''; document.getElementById('mobile-cards-container').innerHTML = ''; mainTitleEl.textContent = '請選擇旅程'; }
 
-    // V7.2 抽出共用的卡片渲染函式，確保兩端體驗一致
+    // V7.3 共用的卡片渲染函式
     function renderFullCardHTML(item) {
         let cardClasses = "card cursor-pointer transition-all duration-200 rounded-lg p-3 shadow-sm";
         let titleClasses = "font-semibold text-gray-800";
         let locationClasses = "text-sm text-gray-500";
         
-        // 可根據 item.type 調整樣式，此處為統一版本
         if (item.type === 'line') {
+             cardClasses += " hover:bg-slate-200/50";
              titleClasses = "font-medium text-xs text-gray-600";
              locationClasses = "text-xs text-gray-400";
+        } else {
+             cardClasses += " hover:ring-2 hover:ring-blue-400";
         }
 
         return `<div class="${cardClasses}" data-index="${item.originalIndex}">
@@ -213,7 +211,7 @@
     }
     
     // =======================================================================
-    // V7.2 - 桌面版互動模組
+    // V7.3 - 桌面版互動模組
     // =======================================================================
     const desktopModule = {
         render: function(groupedByDay, sortedDays) {
@@ -239,7 +237,7 @@
     };
 
     // =======================================================================
-    // V7.2 - 手機版互動模組 (同步桌面版互動)
+    // V7.3 - 手機版互動模組 (同步桌面版互動)
     // =======================================================================
     const mobileModule = {
         render: function(groupedByDay, sortedDays) {
@@ -292,7 +290,7 @@
     };
     
     // =======================================================================
-    // V7.2 - 主程式初始化
+    // V7.3 - 主程式初始化
     // =======================================================================
     function initializeApp() {
         if (window.innerWidth >= 768) {
